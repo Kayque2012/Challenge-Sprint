@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Header } from '../components/Header';
+import { ProtectedRoute } from '../components/ProtectedRoute';
 import { Footer } from '../components/Footer';
 import { Home } from '../pages/Home';
 import { FAQ } from '../pages/FAQ';
@@ -21,9 +22,8 @@ import { Doador } from '../pages/Doador';
 /**
  * Roteamento da aplicação Turma do Bem.
  *
- * Não há Route Guards centralizados aqui — cada dashboard faz sua própria
- * verificação de sessão no useEffect de mount e redireciona para /login
- * se o usuário não estiver autenticado ou não tiver o perfil correto.
+ * Auth centralizada em <ProtectedRoute> — verifica sessão e role antes
+ * de renderizar cada dashboard, redirecionando para /login se necessário.
  *
  * Grupos de rotas:
  *   Públicas       → /, /faq, /quem-somos, /sobre, /reconhecimentos,
@@ -53,10 +53,10 @@ export function AppRoutes() {
             <Route path="/login" element={<Login />} />
             <Route path="/Doador" element={<Doador />} />
 
-            {/* ── Dashboards protegidos (auth verificada internamente) ── */}
-            <Route path="/dashboard/admin"    element={<AdminDashboard />} />
-            <Route path="/dashboard/dentista" element={<DentistaDashboard />} />
-            <Route path="/dashboard/paciente" element={<PacienteDashboard />} />
+            {/* ── Dashboards protegidos ── */}
+            <Route path="/dashboard/admin"    element={<ProtectedRoute allowedRoles={['admin', 'dev']}><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/dashboard/dentista" element={<ProtectedRoute allowedRoles={['dentista', 'dev']}><DentistaDashboard /></ProtectedRoute>} />
+            <Route path="/dashboard/paciente" element={<ProtectedRoute allowedRoles={['paciente']}><PacienteDashboard /></ProtectedRoute>} />
 
             {/* ── Utilitários ── */}
             <Route path="/Calculadora/Score"   element={<CalculadoraScore />} />

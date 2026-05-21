@@ -115,12 +115,8 @@ export function AdminDashboard() {
     coordenadas: {} as Record<string, [number, number]>,
   });
 
+  // Carrega estatísticas globais (auth centralizada em ProtectedRoute)
   useEffect(() => {
-    if (!sessionStorage.getItem("usuarioLogado") || (sessionStorage.getItem("userRole") !== "admin" && sessionStorage.getItem("userRole") !== "dev")) {
-      navigate('/login');
-      return;
-    }
-
     fetch(`${API_URL}/admin/estatisticas`)
       .then(res => {
         if (!res.ok) throw new Error("Erro 500 do servidor");
@@ -144,7 +140,7 @@ export function AdminDashboard() {
           coordenadas: {},
         });
       });
-  }, [navigate]);
+  }, []);
 
   /**
    * Busca pacientes e dentistas em paralelo — sem setState, só retorna a Promise.

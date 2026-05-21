@@ -204,17 +204,13 @@ export function DentistaDashboard() {
       .catch(() => {});
   }, [usuarioLogado, cidadeAtiva]);
 
-  // Valida sessão e carrega fila de triagem
+  // Carrega fila de triagem (auth centralizada em ProtectedRoute)
   useEffect(() => {
-    if (!sessionStorage.getItem('usuarioLogado') || (userRole !== 'dentista' && userRole !== 'dev')) {
-      navigate('/login');
-      return;
-    }
     fetch(`${API_URL}/pacientes?cidade=${cidadeAtiva}`)
       .then(res => res.json())
       .then(data => { setPacientes(Array.isArray(data) ? data.map(mapearPaciente) : []); })
       .catch(() => {});
-  }, [navigate, cidadeAtiva, userRole]);
+  }, [cidadeAtiva]);
 
   // Recarrega dados ao voltar para a aba
   useEffect(() => {

@@ -47,7 +47,6 @@ const TOTAL_CONSULTAS_PLANO = 5;
 export function PacienteDashboard() {
   const navigate = useNavigate();
   const usuarioLogado = sessionStorage.getItem('usuarioLogado');
-  const userRole = sessionStorage.getItem('userRole');
   const userId = sessionStorage.getItem('userId');
 
   const [telaAtiva, setTelaAtiva] = useState<'painel' | 'triagem' | 'consultas'>('painel');
@@ -76,11 +75,9 @@ export function PacienteDashboard() {
   //   2. Histórico de consultas → linha do tempo e cálculo de progresso
   //   3. Oferta de agendamento → proposta de horário enviada por algum dentista
   //   4. Lembretes de e-mail → verifica se há consulta hoje e dispara e-mail se necessário
+  // Carrega dados do paciente (auth centralizada em ProtectedRoute)
   useEffect(() => {
-    if (!usuarioLogado || userRole !== 'paciente' || !userId) {
-      navigate('/login');
-      return;
-    }
+    if (!userId) return;
 
     fetch(`${API_URL}/pacientes/${userId}`)
       .then(res => res.json())
@@ -101,7 +98,7 @@ export function PacienteDashboard() {
       })
       .catch(() => {});
 
-  }, [navigate, userRole, userId, usuarioLogado]);
+  }, [userId]);
 
   const handleLogout = () => { sessionStorage.clear(); navigate('/login'); };
 
