@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useState, useEffect, useMemo } from 'react';
 import { API_URL } from '../config';
 import { LayoutDashboard, Users, LogOut, MapPin, Heart, CalendarDays, Clock, TrendingUp, Smile, DollarSign, Trash2, AlertTriangle, Search, UserX } from 'lucide-react';
+import { Skeleton, EmptyState } from '../components/ui';
 import { MapContainer, TileLayer, CircleMarker, Tooltip, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -261,18 +262,18 @@ export function AdminDashboard() {
     });
 
   const renderSidebar = () => (
-    <aside className="w-[260px] min-w-[260px] bg-white border-r border-gray-200 hidden md:flex flex-col sticky top-[65px] self-start h-[calc(100vh-65px)] z-10 shadow-sm">
-      <div className="p-6 border-b border-gray-100 flex items-center gap-3">
-        <div className="w-12 h-12 rounded-full bg-[#FFF3E0] text-[#FF8C00] flex items-center justify-center font-bold text-xl border-2 border-[#FF8C00]">
+    <aside className="w-64 min-w-64 bg-slate-800 border-r border-slate-700 hidden md:flex flex-col sticky top-0 self-start h-screen z-10 shadow-sm">
+      <div className="p-6 border-b border-slate-700 flex items-center gap-3">
+        <div className="w-12 h-12 rounded-full bg-slate-700 text-orange-400 flex items-center justify-center font-bold text-xl border border-slate-600">
           {usuarioLogado.charAt(0).toUpperCase()}
         </div>
-        <div><p className="text-sm font-bold text-gray-800 truncate w-[160px]">{usuarioLogado}</p><p className="text-[0.7rem] uppercase tracking-wider text-[#FF8C00] font-bold">Administrador</p></div>
+        <div><p className="text-sm font-bold text-white truncate w-40">{usuarioLogado}</p><p className="text-xs uppercase tracking-wider text-orange-400 font-bold">Administrador</p></div>
       </div>
       <nav className="p-4 space-y-2 flex-1 overflow-y-auto">
-        <button onClick={() => setTelaAtiva('painel')} className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-bold transition-colors ${telaAtiva === 'painel' ? 'bg-[#FF8C00] text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}><LayoutDashboard size={20} /> Visão Geral</button>
-        <button onClick={() => { setTelaAtiva('usuarios'); setCarregandoUsuarios(true); }} className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-bold transition-colors ${telaAtiva === 'usuarios' ? 'bg-[#FF8C00] text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}><Users size={20} /> Gerenciar Usuários</button>
+        <button onClick={() => setTelaAtiva('painel')} className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-bold transition-colors ${telaAtiva === 'painel' ? 'bg-orange-500 text-white shadow-sm hover:bg-orange-600' : 'text-slate-300 hover:bg-slate-700'}`}><LayoutDashboard size={20} /> Visão Geral</button>
+        <button onClick={() => { setTelaAtiva('usuarios'); setCarregandoUsuarios(true); }} className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-bold transition-colors ${telaAtiva === 'usuarios' ? 'bg-orange-500 text-white shadow-sm hover:bg-orange-600' : 'text-slate-300 hover:bg-slate-700'}`}><Users size={20} /> Gerenciar Usuários</button>
       </nav>
-      <div className="p-4 border-t border-gray-100"><button onClick={handleLogout} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-bold text-gray-500 hover:text-red-600"><LogOut size={20} /> Sair</button></div>
+      <div className="p-4 border-t border-slate-700"><button onClick={handleLogout} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-bold text-slate-400 hover:text-red-400 transition-colors"><LogOut size={20} /> Sair</button></div>
     </aside>
   );
 
@@ -287,9 +288,9 @@ const dentistasFiltrados = dentistas.filter(d =>
 );
 
   return (
-    <div className="flex min-h-screen bg-[#F5F5DC] font-sans pt-[65px] items-start">
+    <div className="flex min-h-screen bg-slate-50 font-sans items-start">
       {renderSidebar()}
-      <main className="flex-1 p-6 md:p-8 max-w-[1400px] mx-auto w-full animate-fade-in">
+      <main className="flex-1 p-6 md:p-8 max-w-7xl mx-auto w-full animate-fade-in">
 
         {mensagemAdmin && (
           <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-5 py-3 rounded-xl font-bold text-sm flex items-center gap-2">
@@ -308,12 +309,15 @@ const dentistasFiltrados = dentistas.filter(d =>
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                 <input type="text" placeholder="Buscar por nome ou e-mail..." value={filtroBusca}
                   onChange={(e) => setFiltroBusca(e.target.value)}
-                  className="pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm w-full md:w-[280px] focus:ring-2 focus:ring-[#FF8C00]/20 focus:border-[#FF8C00] outline-none" />
+                  className="pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm w-full md:w-[280px] focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none" />
               </div>
             </div>
 
             {carregandoUsuarios ? (
-              <div className="text-center py-20 text-gray-400 font-medium">A carregar utilizadores...</div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Skeleton variant="card" className="h-64" />
+                <Skeleton variant="card" className="h-64" />
+              </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Pacientes */}
@@ -323,10 +327,7 @@ const dentistasFiltrados = dentistas.filter(d =>
                   </div>
                   <div className="divide-y divide-gray-50 max-h-[500px] overflow-y-auto">
                     {pacientesFiltrados.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-10 text-gray-400">
-                        <UserX size={32} className="mb-2" />
-                        <p className="text-sm font-medium">Nenhum paciente encontrado.</p>
-                      </div>
+                      <EmptyState icon={UserX} title="Nenhum paciente encontrado" />
                     ) : pacientesFiltrados.map((p) => (
                       <div key={p.id} className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
                         <div className="flex items-center gap-3 min-w-0">
@@ -356,10 +357,7 @@ const dentistasFiltrados = dentistas.filter(d =>
                   </div>
                   <div className="divide-y divide-gray-50 max-h-[500px] overflow-y-auto">
                     {dentistasFiltrados.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-10 text-gray-400">
-                        <UserX size={32} className="mb-2" />
-                        <p className="text-sm font-medium">Nenhum dentista encontrado.</p>
-                      </div>
+                      <EmptyState icon={UserX} title="Nenhum dentista encontrado" />
                     ) : dentistasFiltrados.map((d) => (
                       <div key={d.id} className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
                         <div className="flex items-center gap-3 min-w-0">
@@ -481,10 +479,11 @@ const dentistasFiltrados = dentistas.filter(d =>
                 </div>
               ))}
               {(!statsAdmin.ultimos_agendamentos || statsAdmin.ultimos_agendamentos.length === 0) && (
-                <div className="flex flex-col items-center justify-center py-10 text-center border-2 border-dashed border-gray-200 rounded-2xl">
-                  <CalendarDays size={40} className="text-gray-300 mb-3" />
-                  <p className="text-gray-400 font-bold">Sem atendimentos previstos.</p>
-                </div>
+                <EmptyState
+                  icon={CalendarDays}
+                  title="Sem atendimentos previstos"
+                  description="Os próximos agendamentos da rede aparecerão aqui."
+                />
               )}
             </div>
           </div>

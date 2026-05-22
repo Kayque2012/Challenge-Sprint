@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { ProtectedRoute } from '../components/ProtectedRoute';
 import { Footer } from '../components/Footer';
@@ -19,6 +19,17 @@ import { FormularioContato } from '../pages/FormularioContato';
 import { Prontuario } from '../pages/Prontuario';
 import { Doador } from '../pages/Doador';
 
+// Layout com Header + Footer para páginas públicas e utilitários
+function PublicLayout() {
+  return (
+    <div className="min-h-screen flex flex-col bg-[#F5F5DC]">
+      <Header />
+      <div className="flex-grow"><Outlet /></div>
+      <Footer />
+    </div>
+  );
+}
+
 /**
  * Roteamento da aplicação Turma do Bem.
  *
@@ -26,46 +37,40 @@ import { Doador } from '../pages/Doador';
  * de renderizar cada dashboard, redirecionando para /login se necessário.
  *
  * Grupos de rotas:
- *   Públicas       → /, /faq, /quem-somos, /sobre, /reconhecimentos,
- *                    /contato, /formulario, /cadastro, /login, /Doador
- *   Protegidas     → /dashboard/admin    (role: admin | dev)
+ *   PublicLayout   → /, /faq, /quem-somos, /sobre, /reconhecimentos,
+ *                    /contato, /formulario, /cadastro, /login, /Doador,
+ *                    /Calculadora/Score, /FormularioContato, /prontuario/:nome
+ *   Dashboards     → /dashboard/admin    (role: admin | dev)
  *                    /dashboard/dentista (role: dentista | dev)
  *                    /dashboard/paciente (role: paciente)
- *   Utilitários    → /Calculadora/Score, /FormularioContato,
- *                    /prontuario/:nome
+ *                    Sem Header/Footer — navegação via sidebar própria.
  */
 export function AppRoutes() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen flex flex-col bg-[#F5F5DC]">
-        <Header />
-        <div className="flex-grow">
-          <Routes>
-            {/* ── Páginas públicas ── */}
-            <Route path="/" element={<Home />} />
-            <Route path="/faq" element={<FAQ />} />
-            <Route path="/reconhecimentos" element={<Reconhecimentos />} />
-            <Route path="/quem-somos" element={<QuemSomos />} />
-            <Route path="/sobre" element={<Sobre />} />
-            <Route path="/contato" element={<Contato />} />
-            <Route path="/formulario" element={<Formulario />} />
-            <Route path="/cadastro" element={<Cadastro />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/Doador" element={<Doador />} />
+      <Routes>
+        {/* ── Páginas com Header + Footer ── */}
+        <Route element={<PublicLayout />}>
+          <Route path="/"                  element={<Home />} />
+          <Route path="/faq"               element={<FAQ />} />
+          <Route path="/reconhecimentos"   element={<Reconhecimentos />} />
+          <Route path="/quem-somos"        element={<QuemSomos />} />
+          <Route path="/sobre"             element={<Sobre />} />
+          <Route path="/contato"           element={<Contato />} />
+          <Route path="/formulario"        element={<Formulario />} />
+          <Route path="/cadastro"          element={<Cadastro />} />
+          <Route path="/login"             element={<Login />} />
+          <Route path="/Doador"            element={<Doador />} />
+          <Route path="/Calculadora/Score" element={<CalculadoraScore />} />
+          <Route path="/FormularioContato" element={<FormularioContato />} />
+          <Route path="/prontuario/:nome"  element={<Prontuario />} />
+        </Route>
 
-            {/* ── Dashboards protegidos ── */}
-            <Route path="/dashboard/admin"    element={<ProtectedRoute allowedRoles={['admin', 'dev']}><AdminDashboard /></ProtectedRoute>} />
-            <Route path="/dashboard/dentista" element={<ProtectedRoute allowedRoles={['dentista', 'dev']}><DentistaDashboard /></ProtectedRoute>} />
-            <Route path="/dashboard/paciente" element={<ProtectedRoute allowedRoles={['paciente']}><PacienteDashboard /></ProtectedRoute>} />
-
-            {/* ── Utilitários ── */}
-            <Route path="/Calculadora/Score"   element={<CalculadoraScore />} />
-            <Route path="/FormularioContato"   element={<FormularioContato />} />
-            <Route path="/prontuario/:nome"    element={<Prontuario />} />
-          </Routes>
-        </div>
-        <Footer />
-      </div>
+        {/* ── Dashboards protegidos — sem Header/Footer ── */}
+        <Route path="/dashboard/admin"    element={<ProtectedRoute allowedRoles={['admin', 'dev']}><AdminDashboard /></ProtectedRoute>} />
+        <Route path="/dashboard/dentista" element={<ProtectedRoute allowedRoles={['dentista', 'dev']}><DentistaDashboard /></ProtectedRoute>} />
+        <Route path="/dashboard/paciente" element={<ProtectedRoute allowedRoles={['paciente']}><PacienteDashboard /></ProtectedRoute>} />
+      </Routes>
     </BrowserRouter>
   );
 }

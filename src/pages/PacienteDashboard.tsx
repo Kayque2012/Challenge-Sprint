@@ -4,6 +4,7 @@ import { API_URL } from '../config';
 import { useForm } from 'react-hook-form';
 import { LayoutDashboard, LogOut, Clock, CalendarDays, Users, ClipboardList, Activity, CheckCircle2, AlertCircle, TrendingUp, Bell, CalendarCheck, ChevronRight, Phone, Mail, Navigation } from 'lucide-react';
 import { MapaRota } from '../components/MapaRota';
+import { Skeleton, EmptyState } from '../components/ui';
 
 interface HistoricoConsulta {
   id?: number;
@@ -52,6 +53,7 @@ export function PacienteDashboard() {
   const [telaAtiva, setTelaAtiva] = useState<'painel' | 'triagem' | 'consultas'>('painel');
   const [historicoPaciente, setHistoricoPaciente] = useState<HistoricoConsulta[]>([]);
   const [fichaEnviada, setFichaEnviada] = useState(false);
+  const [carregandoDados, setCarregandoDados] = useState(true);
   const [mensagemSucesso, setMensagemSucesso] = useState('');
   const [ofertaRecebida, setOfertaRecebida] = useState<OfertaAgendamento | null>(null);
   const [slotEscolhidoId, setSlotEscolhidoId] = useState<string>('');
@@ -77,26 +79,25 @@ export function PacienteDashboard() {
   //   4. Lembretes de e-mail → verifica se há consulta hoje e dispara e-mail se necessário
   // Carrega dados do paciente (auth centralizada em ProtectedRoute)
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) { setCarregandoDados(false); return; }
 
-    fetch(`${API_URL}/pacientes/${userId}`)
+    const fetchInfo = fetch(`${API_URL}/pacientes/${userId}`)
       .then(res => res.json())
-      .then(data => {
-        if (data?.cidade) setPacienteInfo({ cidade: data.cidade, pais: data.pais || 'Brasil' });
-      })
+      .then(data => { if (data?.cidade) setPacienteInfo({ cidade: data.cidade, pais: data.pais || 'Brasil' }); })
       .catch(() => {});
 
-    fetch(`${API_URL}/pacientes/${userId}/historico`)
+    const fetchHistorico = fetch(`${API_URL}/pacientes/${userId}/historico`)
       .then(res => res.json())
       .then(data => { if (Array.isArray(data)) setHistoricoPaciente(data); })
       .catch(() => {});
 
-    fetch(`${API_URL}/ofertas/paciente/${userId}`)
+    const fetchOferta = fetch(`${API_URL}/ofertas/paciente/${userId}`)
       .then(res => res.json())
-      .then(data => {
-        if (data && data.id) setOfertaRecebida(data as OfertaAgendamento);
-      })
+      .then(data => { if (data && data.id) setOfertaRecebida(data as OfertaAgendamento); })
       .catch(() => {});
+
+    Promise.allSettled([fetchInfo, fetchHistorico, fetchOferta])
+      .finally(() => setCarregandoDados(false));
 
   }, [userId]);
 
@@ -188,20 +189,20 @@ export function PacienteDashboard() {
   };
 
   const navBtnClass = (ativa: boolean) =>
-    `flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-bold transition-colors ${ativa ? 'bg-[#FF8C00] text-white shadow-sm hover:bg-[#E67E22]' : 'text-gray-500 hover:bg-gray-50'}`;
+    `flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-bold transition-colors ${ativa ? 'bg-orange-500 text-white shadow-sm hover:bg-orange-600' : 'text-slate-300 hover:bg-slate-700'}`;
 
-  const inputClass = 'w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-700 focus:ring-1 focus:ring-[#FF8C00] focus:border-[#FF8C00] outline-none';
+  const inputClass = 'w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-gray-700 focus:ring-1 focus:ring-orange-500/30 focus:border-orange-500 outline-none';
 
   return (
-    <div className="flex min-h-screen bg-[#F5F5DC] font-sans pt-[65px] items-start">
-      <aside className="w-[260px] min-w-[260px] bg-white border-r border-gray-200 hidden md:flex flex-col sticky top-[65px] self-start h-[calc(100vh-65px)] z-10 shadow-sm">
-        <div className="p-6 border-b border-gray-100 flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-orange-50 text-[#FF8C00] flex items-center justify-center font-bold text-xl border border-orange-100">
+    <div className="flex min-h-screen bg-slate-50 font-sans items-start">
+      <aside className="w-64 min-w-64 bg-slate-800 border-r border-slate-700 hidden md:flex flex-col sticky top-0 self-start h-screen z-10 shadow-sm">
+        <div className="p-6 border-b border-slate-700 flex items-center gap-3">
+          <div className="w-12 h-12 rounded-full bg-slate-700 text-orange-400 flex items-center justify-center font-bold text-xl border border-slate-600">
             {usuarioLogado?.charAt(0).toUpperCase()}
           </div>
           <div>
-            <p className="text-sm font-bold text-gray-800 truncate w-[160px]">{usuarioLogado}</p>
-            <p className="text-[0.7rem] uppercase tracking-wider text-gray-500 font-semibold">Beneficiário TdB</p>
+            <p className="text-sm font-bold text-white truncate w-40">{usuarioLogado}</p>
+            <p className="text-xs uppercase tracking-wider text-slate-400 font-semibold">Beneficiário TdB</p>
           </div>
         </div>
 
@@ -215,19 +216,19 @@ export function PacienteDashboard() {
           <button onClick={() => setTelaAtiva('consultas')} className={`${navBtnClass(telaAtiva === 'consultas')} relative`}>
             <CalendarCheck size={20} /> Consultas
             {ofertaRecebida?.status === 'pendente' && (
-              <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-white text-[#FF8C00] text-[10px] font-black animate-pulse">!</span>
+              <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-white text-[10px] font-black animate-pulse">!</span>
             )}
           </button>
         </nav>
 
-        <div className="p-4 border-t border-gray-100">
-          <button onClick={handleLogout} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-bold text-gray-500 hover:text-red-500 transition-colors">
+        <div className="p-4 border-t border-slate-700">
+          <button onClick={handleLogout} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-bold text-slate-400 hover:text-red-400 transition-colors">
             <LogOut size={20} /> Sair
           </button>
         </div>
       </aside>
 
-      <main className="flex-1 p-6 md:p-8 max-w-[1000px] mx-auto w-full relative">
+      <main className="flex-1 p-6 md:p-8 max-w-4xl mx-auto w-full relative">
         {mensagemSucesso && (() => {
           const isErro = mensagemSucesso.startsWith('__erro__');
           const texto = isErro ? mensagemSucesso.replace('__erro__', '') : mensagemSucesso;
@@ -240,6 +241,14 @@ export function PacienteDashboard() {
 
         {telaAtiva === 'painel' && (
           <div className="animate-fade-in space-y-8">
+            {carregandoDados && (
+              <>
+                <Skeleton variant="card" />
+                <Skeleton variant="card" />
+                <Skeleton variant="card" />
+              </>
+            )}
+            {!carregandoDados && (<>
 
             {/* Oferta de agendamento pendente */}
             {ofertaRecebida?.status === 'pendente' && (
@@ -312,7 +321,7 @@ export function PacienteDashboard() {
                   </span>
                 ))}
               </div>
-              {historicoPaciente.length === 0 && (
+              {historicoPaciente.length === 0 && !carregandoDados && (
                 <p className="text-xs text-gray-400 mt-3 text-center">Preencha a triagem para iniciar o seu tratamento.</p>
               )}
             </div>
@@ -325,7 +334,14 @@ export function PacienteDashboard() {
               </div>
               <div className="p-6">
                 <div className="relative border-l-2 border-gray-100 ml-4 space-y-8">
-                  {historicoPaciente.length > 0 ? (
+                  {historicoPaciente.length === 0 ? (
+                    <EmptyState
+                      icon={ClipboardList}
+                      title="Sem histórico de consultas"
+                      description="Preencha a Ficha de Triagem para que a nossa IA encontre o dentista certo para si."
+                      action={{ label: 'Preencher Triagem', onClick: () => setTelaAtiva('triagem') }}
+                    />
+                  ) : (
                     historicoPaciente.map((item, idx) => (
                       <div key={idx} className="relative pl-8">
                         <div className={`absolute w-6 h-6 rounded-full -left-[13px] top-0 border-4 border-white shadow-sm flex items-center justify-center ${item.status === 'Agendado' ? 'bg-[#FF8C00]' : 'bg-[#8dc63f]'}`}>
@@ -347,12 +363,11 @@ export function PacienteDashboard() {
                         </div>
                       </div>
                     ))
-                  ) : (
-                    <p className="text-gray-500 text-sm pl-4">Ainda não possui histórico de consultas. Preencha a Ficha de Triagem.</p>
                   )}
                 </div>
               </div>
             </div>
+            </>)}
           </div>
         )}
 
@@ -445,12 +460,12 @@ export function PacienteDashboard() {
 
               </div>
             ) : (
-              <div className="bg-white p-12 rounded-3xl border border-gray-100 shadow-sm text-center flex flex-col items-center min-h-[350px] justify-center">
-                <div className="bg-gray-50 p-6 rounded-full mb-4">
-                  <CalendarCheck size={48} className="text-gray-300" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-2">Sem propostas pendentes</h3>
-                <p className="text-gray-500 max-w-sm">Quando um dentista voluntário enviar opções de horário, elas aparecerão aqui para você escolher.</p>
+              <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
+                <EmptyState
+                  icon={CalendarCheck}
+                  title="Sem propostas pendentes"
+                  description="Quando um dentista voluntário enviar opções de horário, elas aparecerão aqui para você escolher."
+                />
               </div>
             )}
           </div>

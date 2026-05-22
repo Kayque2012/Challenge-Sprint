@@ -6,11 +6,12 @@ import { imprimirRelatorio } from '../utils/relatorioUtils';
 import { StatusAgendamento } from '../components/StatusAgendamento';
 import { ModalAvaliarPaciente } from '../components/ModalAvaliarPaciente';
 import { ModalFichaAtiva } from '../components/ModalFichaAtiva';
+import { Skeleton, EmptyState, Badge } from '../components/ui';
 import {
   LayoutDashboard, Users, Calendar, LogOut,
   Search, MessageSquare, Send,
   MapPin, Phone, AlertCircle, Star, Filter, Clock, CheckCircle2, X,
-  Heart, FileText,
+  Heart, FileText, SearchX, CalendarDays,
 } from 'lucide-react';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
@@ -130,6 +131,8 @@ export function DentistaDashboard() {
   const [ofertasMapa, setOfertasMapa] = useState<Record<string, OfertaAgendamento>>({});
   const [pacienteSelecionado, setPacienteSelecionado] = useState<Paciente | null>(null);
   const [fichaAtiva, setFichaAtiva] = useState<Paciente | null>(null);
+  const [carregandoPacientes, setCarregandoPacientes] = useState(true);
+  const [carregandoMeusPacientes, setCarregandoMeusPacientes] = useState(true);
 
   const dentistId = sessionStorage.getItem('userId') || '0';
   const usuarioLogado = sessionStorage.getItem('usuarioLogado') || 'Dentista';
@@ -164,11 +167,14 @@ export function DentistaDashboard() {
   // Carrega pacientes adotados por este dentista
   useEffect(() => {
     const idNum = Number(dentistId);
-    if (!idNum) return;
+    if (!idNum) { setCarregandoMeusPacientes(false); return; }
     fetch(`${API_URL}/pacientes/adotados?idDentista=${idNum}`)
       .then(res => res.json())
-      .then(data => { if (Array.isArray(data)) setMeusPacientes(data.map(mapearPaciente)); })
-      .catch(() => {});
+      .then(data => {
+        if (Array.isArray(data)) setMeusPacientes(data.map(mapearPaciente));
+        setCarregandoMeusPacientes(false);
+      })
+      .catch(() => { setCarregandoMeusPacientes(false); });
   }, [dentistId]);
 
   // Carrega ofertas e agenda confirmada da API
@@ -206,10 +212,14 @@ export function DentistaDashboard() {
 
   // Carrega fila de triagem (auth centralizada em ProtectedRoute)
   useEffect(() => {
+    setCarregandoPacientes(true);
     fetch(`${API_URL}/pacientes?cidade=${cidadeAtiva}`)
       .then(res => res.json())
-      .then(data => { setPacientes(Array.isArray(data) ? data.map(mapearPaciente) : []); })
-      .catch(() => {});
+      .then(data => {
+        setPacientes(Array.isArray(data) ? data.map(mapearPaciente) : []);
+        setCarregandoPacientes(false);
+      })
+      .catch(() => { setCarregandoPacientes(false); });
   }, [cidadeAtiva]);
 
   // Recarrega dados ao voltar para a aba
@@ -366,49 +376,49 @@ export function DentistaDashboard() {
   // ─── Nav ─────────────────────────────────────────────────────────────────────
 
   const navItems = [
-    { id: 'painel',    icon: <LayoutDashboard size={20} />, label: 'Fila de Triagem',     badge: 0 },
-    { id: 'pacientes', icon: <Users size={20} />,           label: 'Meus Pacientes',       badge: meusPacientes.length },
-    { id: 'agenda',    icon: <Calendar size={20} />,        label: 'Agenda de Consultas',  badge: agendamentos.length },
+    { id: 'painel',    icon: <LayoutDashboard size={20} />, label: 'Fila de Triagem',    badge: 0 },
+    { id: 'pacientes', icon: <Users size={20} />,           label: 'Meus Pacientes',      badge: meusPacientes.length },
+    { id: 'agenda',    icon: <Calendar size={20} />,        label: 'Agenda de Consultas', badge: agendamentos.length },
   ] as const;
 
   // ─── Render ───────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex min-h-screen bg-[#F5F5DC] font-sans pt-[65px] items-start">
+    <div className="flex min-h-screen bg-slate-50 font-sans items-start">
 
       {/* Sidebar */}
-      <aside className="w-[260px] min-w-[260px] bg-white border-r border-gray-200 hidden md:flex flex-col sticky top-[65px] self-start h-[calc(100vh-65px)] z-10 shadow-sm">
-        <div className="p-6 border-b border-gray-100 flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-orange-50 text-[#FF8C00] flex items-center justify-center font-bold text-xl border border-orange-100">
+      <aside className="w-64 min-w-64 bg-slate-800 border-r border-slate-700 hidden md:flex flex-col sticky top-0 self-start h-screen z-10 shadow-sm">
+        <div className="p-6 border-b border-slate-700 flex items-center gap-3">
+          <div className="w-12 h-12 rounded-full bg-slate-700 text-orange-400 flex items-center justify-center font-bold text-xl border border-slate-600">
             {usuarioLogado.charAt(0).toUpperCase()}
           </div>
           <div>
-            <p className="text-sm font-bold text-gray-800 truncate w-[160px]">{usuarioLogado}</p>
-            <p className="text-[0.7rem] uppercase tracking-wider text-gray-500 font-semibold">{userRole === 'dev' ? 'Desenvolvedor' : 'Dentista Voluntário'}</p>
+            <p className="text-sm font-bold text-white truncate w-40">{usuarioLogado}</p>
+            <p className="text-xs uppercase tracking-wider text-orange-400 font-semibold">{userRole === 'dev' ? 'Desenvolvedor' : 'Dentista Voluntário'}</p>
           </div>
         </div>
 
         <nav className="p-4 space-y-2 flex-1 overflow-y-auto">
           {navItems.map(item => (
             <button key={item.id} onClick={() => setTelaAtiva(item.id)}
-              className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-bold transition-colors ${telaAtiva === item.id ? 'bg-[#FF8C00] text-white shadow-sm hover:bg-[#E67E22]' : 'text-gray-500 hover:bg-gray-50'}`}>
+              className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-bold transition-colors ${telaAtiva === item.id ? 'bg-orange-500 text-white shadow-sm hover:bg-orange-600' : 'text-slate-300 hover:bg-slate-700'}`}>
               {item.icon} {item.label}
-              {item.badge > 0 && <span className="ml-auto bg-white text-[#FF8C00] text-[10px] px-2 py-0.5 rounded-full">{item.badge}</span>}
+              {item.badge > 0 && <span className="ml-auto bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">{item.badge}</span>}
             </button>
           ))}
         </nav>
 
-        <div className="p-4 border-t border-gray-100">
-          <button onClick={handleLogout} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-bold text-gray-500 hover:text-red-500 transition-colors">
+        <div className="p-4 border-t border-slate-700">
+          <button onClick={handleLogout} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-bold text-slate-400 hover:text-red-400 transition-colors">
             <LogOut size={20} /> Sair
           </button>
         </div>
       </aside>
 
       {/* Conteúdo principal */}
-      <main className="flex-1 p-6 md:p-8 max-w-[1400px] mx-auto w-full relative">
+      <main className="flex-1 p-6 md:p-8 max-w-7xl mx-auto w-full relative">
         {mensagem && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-[#E8F5E9] text-[#2E7D32] border border-[#C8E6C9] px-6 py-3 rounded-xl shadow-lg font-bold animate-fade-in flex items-center gap-2">
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-green-50 text-green-700 border border-green-200 px-6 py-3 rounded-xl shadow-lg font-bold animate-fade-in flex items-center gap-2">
             <CheckCircle2 size={20} /> {mensagem}
           </div>
         )}
@@ -416,7 +426,7 @@ export function DentistaDashboard() {
         {/* ── Fila de Triagem ── */}
         {telaAtiva === 'painel' && (
           <div className="animate-fade-in">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
               <div>
                 <h2 className="text-2xl font-bold text-gray-800">Fila de Triagem Inteligente</h2>
                 {userRole === 'dev' ? (
@@ -424,7 +434,7 @@ export function DentistaDashboard() {
                     <Filter size={14} className="text-gray-400" />
                     <span className="text-xs font-bold text-gray-500 uppercase">Simular Localidade:</span>
                     <select value={cidadeAtiva} onChange={(e) => setCidadeAtiva(e.target.value)}
-                      className="bg-gray-50 border border-gray-200 text-sm rounded-lg px-2 py-1 text-[#FF8C00] font-bold outline-none cursor-pointer hover:border-[#FF8C00] transition-colors">
+                      className="bg-slate-50 border border-slate-200 text-sm rounded-lg px-2 py-1 text-orange-500 font-bold outline-none cursor-pointer hover:border-orange-500 transition-colors">
                       <option value="São Paulo">São Paulo (BR)</option>
                       <option value="Rio de Janeiro">Rio de Janeiro (BR)</option>
                       <option value="Bogotá">Bogotá (CO)</option>
@@ -440,7 +450,7 @@ export function DentistaDashboard() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                 <input type="text" placeholder="Buscar paciente..." value={pesquisa} onChange={(e) => setPesquisa(e.target.value)}
-                  className="pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm w-full md:w-[250px] focus:ring-2 focus:ring-[#FF8C00]/20 focus:border-[#FF8C00] outline-none transition-all" />
+                  className="pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm w-full md:w-64 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all" />
               </div>
             </div>
 
@@ -448,61 +458,71 @@ export function DentistaDashboard() {
               {/* Lista de pacientes */}
               <div className="lg:col-span-8 space-y-4">
                 <span className="text-xs font-bold text-gray-400 uppercase tracking-wider px-2">Ordenado por IA (Score TdB)</span>
-                {pacientesFiltrados.map((p, i) => (
-                  <div key={i} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-orange-200 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative overflow-hidden group">
-                    <div className={`absolute left-0 top-0 bottom-0 w-1 ${p.score_match >= 70 ? 'bg-red-400' : p.score_match >= 40 ? 'bg-[#FF8C00]' : 'bg-[#8dc63f]'}`} />
-                    <div className="flex items-center gap-4 pl-2">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${p.score_match >= 70 ? 'bg-red-50 text-red-600' : 'bg-gray-50 text-gray-600'}`}>
-                        {p.nome.charAt(0)}
+
+                {carregandoPacientes ? (
+                  <>
+                    <Skeleton variant="card" />
+                    <Skeleton variant="card" />
+                    <Skeleton variant="card" />
+                  </>
+                ) : pacientesFiltrados.length === 0 ? (
+                  <EmptyState
+                    icon={SearchX}
+                    title="Nenhum paciente na fila"
+                    description="Quando pacientes desta região entrarem na fila, aparecerão aqui priorizados pelo Score TdB."
+                  />
+                ) : (
+                  pacientesFiltrados.map((p, i) => (
+                    <div key={i} className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-orange-200 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative overflow-hidden">
+                      <div className={`absolute left-0 top-0 bottom-0 w-1 ${p.score_match >= 70 ? 'bg-red-400' : p.score_match >= 40 ? 'bg-orange-400' : 'bg-green-400'}`} />
+                      <div className="flex items-center gap-4 pl-2">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${p.score_match >= 70 ? 'bg-red-50 text-red-600' : 'bg-slate-100 text-slate-600'}`}>
+                          {p.nome.charAt(0)}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-bold text-gray-800 leading-tight cursor-pointer hover:text-orange-500 hover:underline" onClick={() => navigate(`/prontuario/${p.nome}`)}>
+                              {p.nome}
+                            </h4>
+                            <span className="bg-slate-50 text-gray-500 text-xs px-2 py-0.5 rounded-md font-semibold border border-slate-100">{p.idade} anos</span>
+                          </div>
+                          <div className="flex items-center gap-3 mt-1.5">
+                            <p className="text-xs text-gray-500 flex items-center gap-1 font-medium"><MapPin size={12} /> {p.cidade}, {p.pais}</p>
+                            <p className={`text-xs font-bold flex items-center gap-1 uppercase ${(p.tipo_dor || '').includes('quebrado') || p.tipo_dor === 'forte' ? 'text-red-500' : 'text-gray-500'}`}>
+                              <AlertCircle size={12} /> {p.tipo_dor}
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-bold text-gray-800 leading-tight cursor-pointer hover:text-[#FF8C00] hover:underline" onClick={() => navigate(`/prontuario/${p.nome}`)}>
-                            {p.nome}
-                          </h4>
-                          <span className="bg-gray-50 text-gray-500 text-[10px] px-2 py-0.5 rounded-md font-semibold border border-gray-100">{p.idade} anos</span>
+                      <div className="flex items-center gap-4">
+                        <div className="text-right">
+                          <p className="text-xs text-gray-400 font-bold uppercase mb-0.5">Match</p>
+                          <div className="flex items-center justify-end gap-1">
+                            <span className={`text-sm font-bold ${p.score_match >= 70 ? 'text-gray-800' : 'text-gray-500'}`}>{p.score_match}%</span>
+                            {p.score_match >= 70 && <Star size={12} className="text-orange-500 fill-orange-500" />}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-3 mt-1.5">
-                          <p className="text-[11px] text-gray-500 flex items-center gap-1 font-medium"><MapPin size={12} /> {p.cidade}, {p.pais}</p>
-                          <p className={`text-[11px] font-bold flex items-center gap-1 uppercase ${(p.tipo_dor || '').includes('quebrado') || p.tipo_dor === 'forte' ? 'text-red-500' : 'text-gray-500'}`}>
-                            <AlertCircle size={12} /> {p.tipo_dor}
-                          </p>
-                        </div>
+                        <button onClick={() => setPacienteSelecionado(p)} className="bg-white text-orange-500 border border-orange-500 px-4 py-2 rounded-xl font-bold text-xs hover:bg-orange-500 hover:text-white transition-colors">
+                          Avaliar
+                        </button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <p className="text-[9px] text-gray-400 font-bold uppercase mb-0.5">Match</p>
-                        <div className="flex items-center justify-end gap-1">
-                          <span className={`text-sm font-bold ${p.score_match >= 70 ? 'text-gray-800' : 'text-gray-500'}`}>{p.score_match}%</span>
-                          {p.score_match >= 70 && <Star size={12} className="text-[#FF8C00] fill-[#FF8C00]" />}
-                        </div>
-                      </div>
-                      <button onClick={() => setPacienteSelecionado(p)} className="bg-white text-[#FF8C00] border border-[#FF8C00] px-4 py-2 rounded-xl font-bold text-xs hover:bg-[#FF8C00] hover:text-white transition-colors">
-                        Avaliar
-                      </button>
-                    </div>
-                  </div>
-                ))}
-                {pacientesFiltrados.length === 0 && (
-                  <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm text-center">
-                    <p className="text-gray-500">Nenhum paciente na fila para esta região no momento.</p>
-                  </div>
+                  ))
                 )}
               </div>
 
               {/* Chat IA */}
               <div className="lg:col-span-4">
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[550px] sticky top-[90px] overflow-hidden">
-                  <div className="bg-gray-50 p-4 border-b border-gray-100 flex items-center gap-3">
-                    <div className="bg-white p-2 rounded-lg shadow-sm border border-gray-100 text-[#FF8C00]"><MessageSquare size={20} /></div>
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 flex flex-col h-[550px] sticky top-4 overflow-hidden">
+                  <div className="bg-slate-50 p-4 border-b border-slate-100 flex items-center gap-3">
+                    <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-100 text-orange-500"><MessageSquare size={20} /></div>
                     <div>
                       <h3 className="font-bold text-gray-800 text-sm">Assistente TdB</h3>
-                      <p className="text-[10px] text-gray-400 font-semibold">Gemini 2.5</p>
+                      <p className="text-xs text-gray-400 font-semibold">Gemini 2.5</p>
                     </div>
                   </div>
                   <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-white">
-                    <div className="self-start bg-gray-50 p-3.5 rounded-2xl rounded-tl-sm text-sm text-gray-600 border border-gray-100">
+                    <div className="self-start bg-slate-50 p-3.5 rounded-2xl rounded-tl-sm text-sm text-gray-600 border border-slate-100">
                       Doutor, a fila já está priorizada para jovens em vulnerabilidade perto de <strong>{cidadeAtiva}</strong>. Posso te ajudar a analisar algum caso?
                     </div>
                     {respostaIA && (
@@ -510,12 +530,12 @@ export function DentistaDashboard() {
                     )}
                     {carregandoIA && <div className="text-xs text-gray-400 font-medium animate-pulse pl-2">A pensar...</div>}
                   </div>
-                  <div className="p-3 bg-white border-t border-gray-100 flex gap-2">
+                  <div className="p-3 bg-white border-t border-slate-100 flex gap-2">
                     <input type="text" placeholder="Ex: Qual o caso mais grave?" value={pergunta}
                       onChange={(e) => setPergunta(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && enviarPerguntaIA()}
-                      className="flex-1 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-[#FF8C00]/20 focus:border-[#FF8C00] outline-none" />
-                    <button onClick={enviarPerguntaIA} className="bg-[#FF8C00] text-white p-2.5 rounded-xl hover:bg-[#E67E22] transition-colors"><Send size={18} /></button>
+                      className="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none" />
+                    <button onClick={enviarPerguntaIA} className="bg-orange-500 text-white p-2.5 rounded-xl hover:bg-orange-600 transition-colors"><Send size={18} /></button>
                   </div>
                 </div>
               </div>
@@ -527,38 +547,39 @@ export function DentistaDashboard() {
         {telaAtiva === 'pacientes' && (
           <div className="animate-fade-in max-w-4xl mx-auto">
             <div className="mb-6 flex items-center gap-3">
-              <div className="bg-orange-100 p-3 rounded-xl text-orange-500"><Users size={24} /></div>
+              <div className="bg-orange-50 p-3 rounded-xl text-orange-500"><Users size={24} /></div>
               <div>
                 <h2 className="text-2xl font-bold text-gray-800">Meus Pacientes Adotados</h2>
                 <p className="text-gray-500 text-sm">Jovens que assumiu o tratamento até aos 18 anos.</p>
               </div>
             </div>
 
-            {meusPacientes.length === 0 ? (
-              <div className="bg-white p-12 rounded-[32px] border border-gray-100 shadow-sm text-center flex flex-col items-center justify-center min-h-[400px]">
-                <div className="bg-gray-50 p-6 rounded-full mb-6"><Heart size={64} className="text-gray-300" /></div>
-                <h3 className="text-xl font-bold text-gray-800 mb-2">Ainda não adotou pacientes</h3>
-                <p className="text-gray-500 max-w-md mx-auto">Aceda à Fila de Triagem, avalie um caso e clique em "Adotar Paciente" para iniciar o tratamento.</p>
-                <button onClick={() => setTelaAtiva('painel')} className="mt-8 bg-white text-[#FF8C00] border-2 border-[#FF8C00] px-6 py-2.5 rounded-xl font-bold hover:bg-[#FF8C00] hover:text-white transition-colors">
-                  Ver Fila de Triagem
-                </button>
+            {carregandoMeusPacientes ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Skeleton variant="card" />
+                <Skeleton variant="card" />
               </div>
+            ) : meusPacientes.length === 0 ? (
+              <EmptyState
+                icon={Heart}
+                title="Ainda não adotou pacientes"
+                description="Acesse a Fila de Triagem, avalie um caso e clique em Adotar para iniciar o tratamento."
+                action={{ label: 'Ver Fila de Triagem', onClick: () => setTelaAtiva('painel') }}
+              />
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {meusPacientes.map((p, idx) => (
-                  <div key={idx} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between">
+                  <div key={idx} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
                     <div>
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-[#FF8C00] text-white rounded-full flex items-center justify-center font-bold text-sm">{p.nome.charAt(0)}</div>
+                          <div className="w-10 h-10 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold text-sm">{p.nome.charAt(0)}</div>
                           <div>
                             <h4 className="font-bold text-gray-800 leading-tight">{p.nome}</h4>
                             <span className="text-xs text-gray-500 font-medium">{p.idade} anos</span>
                           </div>
                         </div>
-                        <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-[10px] font-bold uppercase flex items-center gap-1">
-                          <CheckCircle2 size={12} /> Adotado
-                        </span>
+                        <Badge variant="success">Adotado</Badge>
                       </div>
                       <div className="space-y-2 mb-3">
                         <p className="text-sm text-gray-600 flex items-center gap-2"><Phone size={14} className="text-gray-400" /> {p.telefone || '(11) 90000-0000'}</p>
@@ -566,11 +587,11 @@ export function DentistaDashboard() {
                       </div>
                       <StatusAgendamento oferta={ofertasMapa[p.nome]} temAgendamento={agendamentos.some(a => a.paciente?.nome === p.nome)} />
                     </div>
-                    <div className="flex gap-2">
-                      <button onClick={() => abrirFicha(p)} className="flex-1 bg-gray-50 text-[#FF8C00] border border-orange-200 py-2.5 rounded-xl font-bold text-sm hover:bg-orange-50 hover:border-[#FF8C00] flex items-center justify-center gap-2 transition-all">
+                    <div className="flex gap-2 mt-4">
+                      <button onClick={() => abrirFicha(p)} className="flex-1 bg-slate-50 text-orange-500 border border-orange-200 py-2.5 rounded-xl font-bold text-sm hover:bg-orange-50 hover:border-orange-500 flex items-center justify-center gap-2 transition-all">
                         <Calendar size={16} /> Prontuário
                       </button>
-                      <button onClick={() => imprimirRelatorio(p, usuarioLogado)} className="bg-gray-50 text-gray-500 border border-gray-200 px-3 py-2.5 rounded-xl hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all flex items-center justify-center" title="Gerar Relatório">
+                      <button onClick={() => imprimirRelatorio(p, usuarioLogado)} className="bg-slate-50 text-gray-500 border border-slate-200 px-3 py-2.5 rounded-xl hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all flex items-center justify-center" title="Gerar Relatório">
                         <FileText size={18} />
                       </button>
                       <button onClick={() => atualizarStatusPaciente(p, 'disponivel')} className="bg-red-50 text-red-500 border border-red-200 px-3 py-2.5 rounded-xl hover:bg-red-100 hover:text-red-600 transition-all flex items-center justify-center" title="Remover paciente">
@@ -588,7 +609,7 @@ export function DentistaDashboard() {
         {telaAtiva === 'agenda' && (
           <div className="animate-fade-in max-w-4xl mx-auto">
             <div className="mb-6 flex items-center gap-3">
-              <div className="bg-orange-100 p-3 rounded-xl text-orange-500"><Calendar size={24} /></div>
+              <div className="bg-orange-50 p-3 rounded-xl text-orange-500"><Calendar size={24} /></div>
               <div>
                 <h2 className="text-2xl font-bold text-gray-800">A Minha Agenda Voluntária</h2>
                 <p className="text-gray-500 text-sm">Próximos agendamentos vinculados ao projeto Turma do Bem.</p>
@@ -596,36 +617,39 @@ export function DentistaDashboard() {
             </div>
 
             {agendamentos.length === 0 ? (
-              <div className="bg-white p-12 rounded-[32px] border border-gray-100 shadow-sm text-center flex flex-col items-center justify-center min-h-[400px]">
-                <div className="bg-gray-50 p-6 rounded-full mb-6"><Clock size={64} className="text-gray-300" /></div>
-                <h3 className="text-xl font-bold text-gray-800 mb-2">A sua agenda está livre</h3>
-                <p className="text-gray-500 max-w-md mx-auto">Ainda não possui consultas agendadas. Vá ao separador "Meus Pacientes" para marcar um horário.</p>
-                <button onClick={() => { if (meusPacientes.length === 0) { alert('Precisa de adotar um paciente na Triagem primeiro!'); setTelaAtiva('painel'); } else setTelaAtiva('pacientes'); }}
-                  className="mt-8 bg-white text-[#FF8C00] border-2 border-[#FF8C00] px-6 py-2.5 rounded-xl font-bold hover:bg-[#FF8C00] hover:text-white transition-colors">
-                  + Novo Agendamento
-                </button>
-              </div>
+              <EmptyState
+                icon={CalendarDays}
+                title="Agenda livre"
+                description="Ainda não há consultas agendadas. Vá a Meus Pacientes para propor um horário."
+                action={{
+                  label: 'Ir para Meus Pacientes',
+                  onClick: () => {
+                    if (meusPacientes.length === 0) { alert('Precisa de adotar um paciente na Triagem primeiro!'); setTelaAtiva('painel'); }
+                    else setTelaAtiva('pacientes');
+                  },
+                }}
+              />
             ) : (
-              <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden">
-                <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+              <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
                   <h3 className="font-bold text-gray-800">Próximos Agendamentos</h3>
-                  <button onClick={() => setTelaAtiva('pacientes')} className="text-[#FF8C00] font-bold text-sm hover:underline">+ Novo Agendamento</button>
+                  <button onClick={() => setTelaAtiva('pacientes')} className="text-orange-500 font-bold text-sm hover:underline">+ Novo Agendamento</button>
                 </div>
-                <div className="divide-y divide-gray-100">
+                <div className="divide-y divide-slate-100">
                   {agendamentos.sort((a, b) => a.data.localeCompare(b.data)).map((ag) => {
                     const { diaSemana, diaMes } = formatarDataAgenda(ag.data);
                     return (
-                      <div key={ag.id} className="p-6 flex items-start gap-6 hover:bg-gray-50 transition-colors animate-fade-in">
-                        <div className="text-center min-w-[60px]">
+                      <div key={ag.id} className="p-6 flex items-start gap-6 hover:bg-slate-50 transition-colors animate-fade-in">
+                        <div className="text-center min-w-16">
                           <p className="text-xs font-bold text-gray-400 uppercase">{diaSemana}</p>
-                          <p className="text-2xl font-black text-[#FF8C00]">{diaMes}</p>
+                          <p className="text-2xl font-black text-orange-500">{diaMes}</p>
                         </div>
                         <div className="flex-1">
                           <h4 className="font-bold text-gray-800 text-lg">{ag.tipo}</h4>
                           <p className="text-gray-500 text-sm">Paciente: {ag.paciente.nome}</p>
                           <div className="flex items-center gap-4 mt-3">
-                            <span className="bg-orange-50 text-[#FF8C00] px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5"><Clock size={14} /> {ag.hora}</span>
-                            <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5"><MapPin size={14} /> O seu Consultório</span>
+                            <span className="bg-orange-50 text-orange-500 px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5"><Clock size={14} /> {ag.hora}</span>
+                            <span className="bg-slate-100 text-gray-600 px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5"><MapPin size={14} /> O seu Consultório</span>
                           </div>
                           <button
                             onClick={() => handleConcluirConsulta(ag.id)}
