@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useCep } from '../hooks/useCep';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import { DADOS_PAISES } from '../data/estadosCidades';
@@ -12,6 +13,7 @@ interface CadastroFormData {
   documento?: string;
   pais?: string;
   confirma?: string;
+  cep?: string;
 }
 
 export function Cadastro() {
@@ -22,11 +24,21 @@ export function Cadastro() {
   const senha = watch('senha');
   const tipoPerfil = watch('tipo');
   const paisSelecionado = watch('pais');
+  const cepValue = watch('cep') ?? '';
+
+  const { dados: cepDados, loading: cepLoading, erro: cepErro } = useCep(cepValue);
 
   const [estadoSelecionado, setEstadoSelecionado] = useState('');
   const [cidadeInput, setCidadeInput] = useState('');
   const [cidadeValida, setCidadeValida] = useState('');
   const [mostrarDropdown, setMostrarDropdown] = useState(false);
+
+  useEffect(() => {
+    if (!cepDados) return;
+    setEstadoSelecionado(cepDados.uf);
+    setCidadeValida(cepDados.localidade);
+    setCidadeInput('');
+  }, [cepDados]);
 
   const dadosPais = paisSelecionado ? DADOS_PAISES[paisSelecionado] : null;
   const estadosPais = dadosPais?.estados || [];
@@ -34,6 +46,15 @@ export function Cadastro() {
   const cidadesFiltradas = cidadesEstado.filter(c =>
     c.toLowerCase().includes(cidadeInput.toLowerCase())
   );
+
+  // Formata CEP em tempo real: 00000-000
+  const handleCep = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const digits = e.target.value.replace(/\D/g, '').slice(0, 8);
+    const formatted = digits.length > 5
+      ? `${digits.slice(0, 5)}-${digits.slice(5)}`
+      : digits;
+    setValue('cep', formatted);
+  };
 
   // Formata CPF em tempo real: 000.000.000-00
   const handleCPF = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -221,6 +242,33 @@ export function Cadastro() {
                   </div>
                 ) : null}
               </div>
+
+              {/* Campo CEP — apenas para Brasil, preenche estado e cidade automaticamente */}
+              {paisSelecionado === 'Brasil' && (
+                <div className="flex flex-col">
+                  <label className="text-[0.9rem] font-semibold text-[#444] mb-[8px]">
+                    CEP <span className="text-gray-400 font-normal text-xs">(preenchimento automático)</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="00000-000"
+                    maxLength={9}
+                    className={inputClass(!!cepErro)}
+                    {...register('cep', { onChange: handleCep })}
+                  />
+                  {cepLoading && (
+                    <span className="text-xs text-gray-400 mt-1 animate-pulse">A buscar endereço...</span>
+                  )}
+                  {cepErro && (
+                    <span className="text-[#D8000C] text-xs mt-1 font-semibold">{cepErro}</span>
+                  )}
+                  {cepDados && !cepLoading && (
+                    <p className="text-xs text-[#FF8C00] font-semibold mt-1">
+                      ✓ {cepDados.logradouro}{cepDados.bairro ? `, ${cepDados.bairro}` : ''}
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Busca de cidade — aparece após selecionar o estado (todos os países) */}
               {dadosPais && estadoSelecionado && (

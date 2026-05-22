@@ -1,7 +1,12 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect, useMemo } from 'react';
 import { API_URL } from '../config';
-import { LayoutDashboard, Users, LogOut, MapPin, Heart, CalendarDays, Clock, TrendingUp, Smile, DollarSign, Trash2, AlertTriangle, Search, UserX } from 'lucide-react';
+import { LayoutDashboard, Users, LogOut, MapPin, Heart, CalendarDays, Clock, TrendingUp, Smile, DollarSign, Archive, AlertTriangle, Search, UserX, FileDown, Sheet } from 'lucide-react';
+import {
+  exportarPacientesPDF, exportarPacientesCSV,
+  exportarDentistasPDF, exportarDentistasCSV,
+  exportarAtendimentosPDF, exportarAtendimentosCSV,
+} from '../utils/adminExportUtils';
 import { Skeleton, EmptyState } from '../components/ui';
 import { MapContainer, TileLayer, CircleMarker, Tooltip, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -97,6 +102,25 @@ interface UsuarioDentista {
   cro?: string;
 }
 
+function BotoesExportar({ onPDF, onCSV }: { onPDF: () => void; onCSV: () => void }) {
+  return (
+    <div className="flex gap-2">
+      <button
+        onClick={onPDF}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-500 border border-slate-200 hover:text-orange-500 hover:border-orange-300 hover:bg-orange-50 transition-colors"
+      >
+        <FileDown size={13} /> PDF
+      </button>
+      <button
+        onClick={onCSV}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-500 border border-slate-200 hover:text-orange-500 hover:border-orange-300 hover:bg-orange-50 transition-colors"
+      >
+        <Sheet size={13} /> CSV
+      </button>
+    </div>
+  );
+}
+
 export function AdminDashboard() {
   const navigate = useNavigate();
   const usuarioLogado = sessionStorage.getItem("usuarioLogado") || "Admin";
@@ -107,6 +131,11 @@ export function AdminDashboard() {
   const [filtroBusca, setFiltroBusca] = useState('');
   const [carregandoUsuarios, setCarregandoUsuarios] = useState(false);
   const [mensagemAdmin, setMensagemAdmin] = useState('');
+  const [confirmacaoPendente, setConfirmacaoPendente] = useState<{
+    tipo: 'pacientes' | 'dentistas';
+    id: number;
+    nome: string;
+  } | null>(null);
 
   const [statsAdmin, setStatsAdmin] = useState({
     total_beneficiarios: 0,
@@ -192,29 +221,28 @@ export function AdminDashboard() {
     return () => clearInterval(id);
   }, []);
 
-  /**
-   * Exclui um usuário (paciente ou dentista) pelo endpoint correto.
-   * Após confirmação do admin, chama a API e atualiza o estado local —
-   * o mapa de calor recomputa automaticamente via useMemo([pacientes, dentistas]).
-   */
-  const deletarUsuario = async (
-    tipo: 'pacientes' | 'dentistas',
-    id: number,
-    nome: string
-  ) => {
-    if (!window.confirm(`Excluir permanentemente a conta de "${nome}"? Esta ação não pode ser desfeita.`)) return;
+  // Abre o modal de confirmação — o fetch só acontece em handleConfirmarInativacao.
+  const deletarUsuario = (tipo: 'pacientes' | 'dentistas', id: number, nome: string) => {
+    setConfirmacaoPendente({ tipo, id, nome });
+  };
+
+  // Chamada HTTP idêntica à anterior (DELETE) — apenas renomeada e movida para cá.
+  const handleConfirmarInativacao = async () => {
+    if (!confirmacaoPendente) return;
+    const { tipo, id, nome } = confirmacaoPendente;
+    setConfirmacaoPendente(null);
     try {
       const res = await fetch(`${API_URL}/${tipo}/${id}`, { method: 'DELETE' });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        setMensagemAdmin(`Erro ao excluir "${nome}": ${(err as {erro?: string}).erro ?? `HTTP ${res.status}`}`);
+        setMensagemAdmin(`Erro ao inativar "${nome}": ${(err as { erro?: string }).erro ?? `HTTP ${res.status}`}`);
       } else {
         if (tipo === 'pacientes') setPacientes(prev => prev.filter(p => p.id !== id));
         else setDentistas(prev => prev.filter(d => d.id !== id));
-        setMensagemAdmin(`Conta de ${nome} excluída com sucesso.`);
+        setMensagemAdmin(`Conta de ${nome} inativada com sucesso.`);
       }
     } catch {
-      setMensagemAdmin(`Erro de conexão ao tentar excluir "${nome}".`);
+      setMensagemAdmin(`Erro de conexão ao tentar inativar "${nome}".`);
     }
     setTimeout(() => setMensagemAdmin(''), 4000);
   };
@@ -324,6 +352,10 @@ const dentistasFiltrados = dentistas.filter(d =>
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                   <div className="p-5 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
                     <h3 className="font-bold text-gray-800 flex items-center gap-2"><Users size={18} className="text-[#8dc63f]" /> Pacientes ({pacientesFiltrados.length})</h3>
+                    <BotoesExportar
+                      onPDF={() => exportarPacientesPDF(pacientesFiltrados)}
+                      onCSV={() => exportarPacientesCSV(pacientesFiltrados)}
+                    />
                   </div>
                   <div className="divide-y divide-gray-50 max-h-[500px] overflow-y-auto">
                     {pacientesFiltrados.length === 0 ? (
@@ -341,9 +373,9 @@ const dentistasFiltrados = dentistas.filter(d =>
                           </div>
                         </div>
                         <button onClick={() => deletarUsuario('pacientes', p.id, p.nomePaciente || p.nome || '')}
-                          className="ml-3 shrink-0 p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-                          title="Excluir conta">
-                          <Trash2 size={16} />
+                          className="ml-3 shrink-0 p-2 rounded-lg text-gray-400 hover:text-amber-600 hover:bg-amber-50 transition-colors"
+                          title="Inativar conta">
+                          <Archive size={16} />
                         </button>
                       </div>
                     ))}
@@ -354,6 +386,10 @@ const dentistasFiltrados = dentistas.filter(d =>
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                   <div className="p-5 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
                     <h3 className="font-bold text-gray-800 flex items-center gap-2"><Heart size={18} className="text-[#FF8C00]" /> Dentistas ({dentistasFiltrados.length})</h3>
+                    <BotoesExportar
+                      onPDF={() => exportarDentistasPDF(dentistasFiltrados)}
+                      onCSV={() => exportarDentistasCSV(dentistasFiltrados)}
+                    />
                   </div>
                   <div className="divide-y divide-gray-50 max-h-[500px] overflow-y-auto">
                     {dentistasFiltrados.length === 0 ? (
@@ -371,9 +407,9 @@ const dentistasFiltrados = dentistas.filter(d =>
                           </div>
                         </div>
                         <button onClick={() => deletarUsuario('dentistas', d.id, d.nomeDentista || d.nome || '')}
-                          className="ml-3 shrink-0 p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-                          title="Excluir conta">
-                          <Trash2 size={16} />
+                          className="ml-3 shrink-0 p-2 rounded-lg text-gray-400 hover:text-amber-600 hover:bg-amber-50 transition-colors"
+                          title="Inativar conta">
+                          <Archive size={16} />
                         </button>
                       </div>
                     ))}
@@ -462,7 +498,13 @@ const dentistasFiltrados = dentistas.filter(d =>
           </div>
 
           <div className="bg-white rounded-3xl shadow-sm p-8 border border-gray-100 h-full">
-            <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2"><CalendarDays size={24} className="text-[#8dc63f]"/> Agenda da Rede</h3>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2"><CalendarDays size={24} className="text-[#8dc63f]"/> Agenda da Rede</h3>
+              <BotoesExportar
+                onPDF={() => exportarAtendimentosPDF(statsAdmin.ultimos_agendamentos)}
+                onCSV={() => exportarAtendimentosCSV(statsAdmin.ultimos_agendamentos)}
+              />
+            </div>
             <div className="space-y-4">
               {statsAdmin.ultimos_agendamentos && statsAdmin.ultimos_agendamentos.map((ag: AgendamentoAdmin, index: number) => (
                 <div key={index} className="p-5 rounded-2xl border border-gray-100 shadow-sm hover:border-orange-200 transition-colors flex flex-col gap-2">
@@ -490,6 +532,46 @@ const dentistasFiltrados = dentistas.filter(d =>
         </div>
         </>}
       </main>
+
+      {/* ── Modal de confirmação de inativação ── */}
+      {confirmacaoPendente && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          onClick={() => setConfirmacaoPendente(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 border border-slate-100"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-4 mb-5">
+              <div className="bg-amber-50 p-3 rounded-xl shrink-0">
+                <Archive size={24} className="text-amber-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-800">Inativar Conta</h3>
+                <p className="text-sm text-gray-500 truncate max-w-xs">{confirmacaoPendente.nome}</p>
+              </div>
+            </div>
+            <p className="text-gray-600 text-sm mb-8 leading-relaxed">
+              Deseja inativar este usuário? Ele perderá acesso à plataforma mas seus dados serão preservados.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmacaoPendente(null)}
+                className="flex-1 px-4 py-3 rounded-xl border border-slate-200 text-gray-600 font-bold text-sm hover:bg-slate-50 transition-colors"
+              >
+                Voltar
+              </button>
+              <button
+                onClick={handleConfirmarInativacao}
+                className="flex-1 px-4 py-3 rounded-xl bg-amber-600 text-white font-bold text-sm hover:bg-amber-700 transition-colors"
+              >
+                Inativar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
