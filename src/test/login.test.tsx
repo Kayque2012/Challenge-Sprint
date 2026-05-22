@@ -18,7 +18,7 @@ function renderLogin() {
 describe('Login — renderização', () => {
   it('exibe o título de boas-vindas', () => {
     renderLogin();
-    expect(screen.getByText('Bem-vindo de volta!')).toBeInTheDocument();
+    expect(screen.getByText('Bem-vindo!')).toBeInTheDocument();
   });
 
   it('exibe campo de e-mail e botão Entrar', () => {
@@ -98,18 +98,16 @@ describe('Login — recuperação de senha', () => {
     renderLogin();
     fireEvent.click(screen.getByText('Esqueci minha senha'));
     expect(
-      screen.getByText('Digite seu e-mail no campo acima para recuperar a senha.'),
+      screen.getByText('Digite seu e-mail no campo acima antes de redefinir a senha.'),
     ).toBeInTheDocument();
   });
 
-  it('exibe confirmação de envio quando e-mail está preenchido', () => {
+  it('exibe formulário de redefinição quando e-mail está preenchido', () => {
     renderLogin();
     fireEvent.change(screen.getByPlaceholderText('exemplo@email.com'), {
       target: { value: 'usuario@teste.com' },
     });
     fireEvent.click(screen.getByText('Esqueci minha senha'));
-    expect(
-      screen.getByText('Um link de recuperação foi enviado para usuario@teste.com!'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('Nova Senha')).toBeInTheDocument();
   });
 });

@@ -16,6 +16,7 @@ export function Login() {
   const [confirmarSenha, setConfirmarSenha] = useState('');
   const [enviandoRedefinicao, setEnviandoRedefinicao] = useState(false);
   const navigate = useNavigate();
+  const jaLogouAntes = sessionStorage.getItem('jaLogouAntes');
 
   const handleEsqueciSenha = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -30,8 +31,7 @@ export function Login() {
     setMostrarRedefinicao(prev => !prev);
   };
 
-  const handleRedefinirSenha = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleRedefinirSenha = async () => {
     if (novaSenha.length < 6) {
       setMensagem({ texto: "A senha deve ter no mínimo 6 caracteres.", tipo: "erro" });
       return;
@@ -84,6 +84,7 @@ export function Login() {
           sessionStorage.setItem("dentistaCidade", usuario.cidade);
         }
 
+        sessionStorage.setItem('jaLogouAntes', '1');
         setMensagem({ texto: `Login aprovado! Bem-vindo(a).`, tipo: "sucesso" });
 
         // Redireciona pelo tipo de perfil após breve feedback visual
@@ -113,7 +114,7 @@ export function Login() {
       <div className="bg-white w-full max-w-[500px] p-[30px] sm:p-[40px] rounded-[16px] shadow-[0_10px_40px_rgba(0,0,0,0.08)] border border-black/5">
         
         <div className="text-center mb-[30px]">
-          <h2 className="text-[#333] text-[2rem] m-[0_0_10px_0] font-bold">Bem-vindo de volta!</h2>
+          <h2 className="text-[#333] text-[2rem] m-[0_0_10px_0] font-bold">{jaLogouAntes ? 'Bem-vindo de volta!' : 'Bem-vindo!'}</h2>
           <p className="text-[#666] m-0 text-[0.95rem]">Faça login para acessar o painel da Turma do Bem.</p>
         </div>
 
@@ -158,7 +159,7 @@ export function Login() {
           {mostrarRedefinicao && (
             <div className="mb-5 p-4 bg-orange-50 border border-orange-200 rounded-xl">
               <p className="text-sm font-bold text-gray-700 mb-3">Redefinir Senha</p>
-              <form onSubmit={handleRedefinirSenha} className="space-y-3">
+              <div className="space-y-3">
                 <div>
                   <label className="text-xs font-semibold text-gray-600 mb-1 block">Nova Senha</label>
                   <input
@@ -180,13 +181,14 @@ export function Login() {
                   />
                 </div>
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={handleRedefinirSenha}
                   disabled={enviandoRedefinicao}
                   className="w-full cursor-pointer bg-[#FF8C00] text-white font-bold py-3 rounded-xl hover:bg-[#E67E22] transition-colors disabled:opacity-60"
                 >
                   {enviandoRedefinicao ? 'Redefinindo...' : 'Redefinir Senha'}
                 </button>
-              </form>
+              </div>
             </div>
           )}
 
