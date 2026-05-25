@@ -20,8 +20,8 @@ O sistema utiliza um algoritmo de **"Score TdB"** para priorizar atendimentos po
 
 ## 🚀 Links do Projeto
 
-- **🌍 Deploy (Vercel):** [challenge-sprint-rose.vercel.app](https://challenge-sprint-rose.vercel.app/)
-- **💻 Repositório GitHub:** [github.com/gcorrea4/Challenge-Sprint](https://github.com/gcorrea4/Challenge-Sprint)
+- **🌍 Deploy (Vercel):** [testando-three-xi.vercel.app](https://testando-three-xi.vercel.app/)
+- **💻 Repositório GitHub:** [github.com/Kayque2012/Challenge-Sprint](https://github.com/Kayque2012/Challenge-Sprint)
 - **🎥 Vídeo de Apresentação:** [YouTube](https://youtube.com)
 
 ---
@@ -137,7 +137,7 @@ Projeto cld front/
 
 ```bash
 # 1. Clonar o repositório
-git clone https://github.com/gcorrea4/Challenge-Sprint.git
+git clone https://github.com/Kayque2012/Challenge-Sprint.git
 cd "Challenge-Sprint"
 
 # 2. Instalar dependências
