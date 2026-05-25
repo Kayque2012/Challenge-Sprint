@@ -14,6 +14,7 @@ export function CalculadoraScore() {
     const financeiro = calcularRenda(renda);
     const idadePts = IDADE_SCORE[idade] ?? 0;
     const total = gravidade + financeiro + idadePts;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setBreakdown({ gravidade, financeiro, idade: idadePts });
     setScore(total);
   }, [idade, renda, tipoDor]);
