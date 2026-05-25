@@ -21,7 +21,9 @@ export function useCep(cep: string): UseCepReturn {
   useEffect(() => {
     const cepLimpo = cep.replace(/\D/g, '');
     if (cepLimpo.length !== 8) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDados(null);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setErro('');
       return;
     }
