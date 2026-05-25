@@ -79,7 +79,6 @@ export function PacienteDashboard() {
   //   4. Lembretes de e-mail → verifica se há consulta hoje e dispara e-mail se necessário
   // Carrega dados do paciente (auth centralizada em ProtectedRoute)
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!userId) { setCarregandoDados(false); return; }
 
     const fetchInfo = fetch(`${API_URL}/pacientes/${userId}`)
@@ -217,6 +216,7 @@ export function PacienteDashboard() {
     const cObj = new Date(Number(cAno), Number(cMes) - 1, Number(cDia));
     confirmedDiaSemana    = DIAS_SEMANA[cObj.getDay()];
     confirmedDataFormatada = `${cDia}/${cMes}/${cAno}`;
+    // eslint-disable-next-line react-hooks/purity
     confirmedDiasAte      = Math.ceil((cObj.getTime() - Date.now()) / 86_400_000);
   }
 
