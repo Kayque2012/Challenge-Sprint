@@ -8,13 +8,13 @@ export function Footer() {
 
       <div className="max-w-[1200px] w-full mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[40px] mb-[40px]">
         
-        {/* 1. Coluna: Turma do Bem */}
+        {/* 1. Coluna: Dentista na Nuvem */}
         <div className="flex flex-col items-start">
           <h3 className="text-[#FFAF00] text-[1.3rem] mt-0 mb-[15px] font-bold">
-            Turma do Bem
+            Dentista na Nuvem
           </h3>
           <p className="text-white/60 leading-[1.6] text-[0.9rem] m-0">
-            Otimizando o atendimento e transformando vidas através da odontologia voluntária.
+            Conectando jovens em vulnerabilidade a dentistas voluntários com tecnologia e humanidade.
           </p>
           
           {/* Novo Link: Seja um doador */}
@@ -65,7 +65,7 @@ export function Footer() {
       </div>
 
       <div className="border-t border-white/10 pt-[20px] text-center text-white/40 text-[0.85rem]">
-        <p className="m-0">&copy; 2026 Challenge Turma do Bem - FIAP. Projeto acadêmico sem fins lucrativos.</p>
+        <p className="m-0">&copy; 2026 Dentista na Nuvem — Challenge FIAP. Projeto acadêmico sem fins lucrativos.</p>
       </div>
     </footer>
   );

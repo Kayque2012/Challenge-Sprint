@@ -21,9 +21,13 @@ interface Props {
 
 export function ModalAvaliarPaciente({ paciente, onClose, onAdotar }: Props) {
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000] flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-white w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl flex flex-col md:flex-row overflow-hidden animate-scale-in" onClick={e => e.stopPropagation()}>
-        <div className="p-8 md:w-1/2 overflow-y-auto">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000] flex items-end sm:items-center justify-center sm:p-4" onClick={onClose}>
+      <div className="bg-white w-full sm:max-w-4xl max-h-[92vh] rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col md:flex-row overflow-hidden animate-scale-in" onClick={e => e.stopPropagation()}>
+        {/* Drag handle — mobile only */}
+        <div className="flex justify-center py-2.5 md:hidden flex-shrink-0">
+          <div className="w-10 h-1 bg-gray-300 rounded-full" />
+        </div>
+        <div className="flex-1 min-h-0 p-6 md:p-8 md:w-1/2 md:flex-none overflow-y-auto">
           <button onClick={onClose} className="mb-6 text-gray-400 hover:text-gray-800 text-sm font-bold transition-colors">← Fechar</button>
           <div className="flex items-center gap-4 mb-8">
             <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center text-gray-600 text-xl font-bold border border-gray-200">{paciente.nome.charAt(0)}</div>
@@ -48,7 +52,7 @@ export function ModalAvaliarPaciente({ paciente, onClose, onAdotar }: Props) {
             </button>
           </div>
         </div>
-        <div className="bg-gray-100 md:w-1/2 h-[300px] md:h-auto relative">
+        <div className="bg-gray-100 md:w-1/2 md:flex-none h-[200px] md:h-auto relative flex-shrink-0">
           <div className="absolute top-4 left-4 z-10 bg-white/90 backdrop-blur px-3 py-1.5 rounded-lg shadow-sm border border-gray-200 pointer-events-none"><p className="text-[10px] font-bold text-gray-500 uppercase">Geolocalização</p></div>
           <iframe width="100%" height="100%" style={{ border: 0 }} loading="lazy" allowFullScreen
             src={`https://maps.google.com/maps?q=${encodeURIComponent(paciente.cidade + ", " + paciente.pais)}&t=&z=14&ie=UTF8&iwloc=&output=embed`}

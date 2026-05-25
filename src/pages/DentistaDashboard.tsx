@@ -55,6 +55,7 @@ interface SlotProposto {
 }
 
 interface OfertaAgendamento {
+  id?: number;
   dentistaNome: string;
   dentistaCidade: string;
   procedimento: string;
@@ -133,6 +134,7 @@ export function DentistaDashboard() {
   const [fichaAtiva, setFichaAtiva] = useState<Paciente | null>(null);
   const [carregandoPacientes, setCarregandoPacientes] = useState(true);
   const [carregandoMeusPacientes, setCarregandoMeusPacientes] = useState(true);
+  const [confirmarCancelamento, setConfirmarCancelamento] = useState<Paciente | null>(null);
 
   const dentistId = sessionStorage.getItem('userId') || '0';
   const usuarioLogado = sessionStorage.getItem('usuarioLogado') || 'Dentista';
@@ -190,6 +192,7 @@ export function DentistaDashboard() {
         const agendados: Agendamento[] = [];
         for (const o of ofertas) {
           mapa[o.pacienteNome] = {
+            id: o.id,
             dentistaNome: usuarioLogado, dentistaCidade: cidadeAtiva,
             procedimento: o.procedimento, slots: [],
             status: o.status as 'pendente' | 'confirmado',
@@ -300,7 +303,6 @@ export function DentistaDashboard() {
   ) => {
     const idNum = Number(dentistId);
     if (acao === 'adotado' && !idNum) { alert('Erro: ID do dentista não encontrado. Por favor, faça login novamente.'); return; }
-    if (acao === 'disponivel' && !window.confirm(`Tem certeza que deseja cancelar a adoção de ${paciente.nome}? Ele voltará para a fila de triagem.`)) return;
 
     try {
       const res = await fetch(`${API_URL}/pacientes/${paciente.id}`, {
@@ -338,6 +340,21 @@ export function DentistaDashboard() {
       }
     } catch {
       showMensagem(acao === 'adotado' ? 'Erro ao adotar paciente. Tente novamente.' : 'Erro ao cancelar adoção. Tente novamente.');
+    }
+  };
+
+  const handleCancelarOferta = async (ofertaId: number, pacienteNome: string) => {
+    try {
+      const res = await fetch(`${API_URL}/ofertas/${ofertaId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error();
+      setOfertasMapa(prev => {
+        const novo = { ...prev };
+        delete novo[pacienteNome];
+        return novo;
+      });
+      showMensagem(`Proposta enviada a ${pacienteNome} cancelada com sucesso.`);
+    } catch {
+      showMensagem('Erro ao cancelar a proposta. Tente novamente.');
     }
   };
 
@@ -384,57 +401,82 @@ export function DentistaDashboard() {
   // ─── Render ───────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex min-h-screen bg-slate-50 font-sans items-start">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans pb-16 md:pb-0 transition-colors duration-300">
 
-      {/* Sidebar */}
-      <aside className="w-64 min-w-64 bg-slate-800 border-r border-slate-700 hidden md:flex flex-col sticky top-0 self-start h-screen z-10 shadow-sm">
-        <div className="p-6 border-b border-slate-700 flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-slate-700 text-orange-400 flex items-center justify-center font-bold text-xl border border-slate-600">
-            {usuarioLogado.charAt(0).toUpperCase()}
+      {/* ── Top navigation bar ── */}
+      <header className="sticky top-0 z-40 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center gap-4">
+
+          {/* User info */}
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <div className="w-9 h-9 bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl text-white flex items-center justify-center font-black text-base shadow-sm">
+              {usuarioLogado.charAt(0).toUpperCase()}
+            </div>
+            <div className="hidden sm:block">
+              <p className="text-sm font-bold text-gray-900 dark:text-white leading-none truncate max-w-[140px]">{usuarioLogado}</p>
+              <p className="text-xs text-orange-500 font-semibold mt-0.5">
+                {userRole === 'dev' ? 'Desenvolvedor' : 'Dentista Voluntário'}
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-bold text-white truncate w-40">{usuarioLogado}</p>
-            <p className="text-xs uppercase tracking-wider text-orange-400 font-semibold">{userRole === 'dev' ? 'Desenvolvedor' : 'Dentista Voluntário'}</p>
-          </div>
-        </div>
 
-        <nav className="p-4 space-y-2 flex-1 overflow-y-auto">
-          {navItems.map(item => (
-            <button key={item.id} onClick={() => setTelaAtiva(item.id)}
-              className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-bold transition-colors ${telaAtiva === item.id ? 'bg-orange-500 text-white shadow-sm hover:bg-orange-600' : 'text-slate-300 hover:bg-slate-700'}`}>
-              {item.icon} {item.label}
-              {item.badge > 0 && <span className="ml-auto bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">{item.badge}</span>}
-            </button>
-          ))}
-        </nav>
+          {/* Tab navigation — desktop */}
+          <nav className="hidden md:flex items-center gap-1 bg-slate-100 dark:bg-slate-700 rounded-xl p-1 mx-auto">
+            {navItems.map(item => (
+              <button
+                key={item.id}
+                onClick={() => setTelaAtiva(item.id)}
+                className={`relative flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all duration-200 ${
+                  telaAtiva === item.id
+                    ? 'bg-white dark:bg-slate-600 text-gray-900 dark:text-white shadow-sm'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-white/60 dark:hover:bg-slate-600/60'
+                }`}
+              >
+                {item.icon}
+                {item.label}
+                {item.badge > 0 && (
+                  <span className="bg-orange-500 text-white text-[10px] font-black w-[18px] h-[18px] rounded-full flex items-center justify-center leading-none">
+                    {item.badge}
+                  </span>
+                )}
+              </button>
+            ))}
+          </nav>
 
-        <div className="p-4 border-t border-slate-700">
-          <button onClick={handleLogout} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-bold text-slate-400 hover:text-red-400 transition-colors">
-            <LogOut size={20} /> Sair
+          {/* Logout */}
+          <button
+            onClick={handleLogout}
+            className="ml-auto flex items-center gap-2 text-slate-400 hover:text-red-500 text-sm font-bold transition-colors px-3 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30"
+            title="Sair"
+          >
+            <LogOut size={16} />
+            <span className="hidden sm:inline">Sair</span>
           </button>
         </div>
-      </aside>
+      </header>
+
+      {/* Toast */}
+      {mensagem && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-green-50 text-green-700 border border-green-200 px-6 py-3 rounded-xl shadow-lg font-bold animate-fade-in flex items-center gap-2 whitespace-nowrap">
+          <CheckCircle2 size={20} /> {mensagem}
+        </div>
+      )}
 
       {/* Conteúdo principal */}
-      <main className="flex-1 p-6 md:p-8 max-w-7xl mx-auto w-full relative">
-        {mensagem && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-green-50 text-green-700 border border-green-200 px-6 py-3 rounded-xl shadow-lg font-bold animate-fade-in flex items-center gap-2">
-            <CheckCircle2 size={20} /> {mensagem}
-          </div>
-        )}
+      <main className="max-w-7xl mx-auto px-4 md:px-8 py-8 w-full">
 
         {/* ── Fila de Triagem ── */}
         {telaAtiva === 'painel' && (
           <div className="animate-fade-in">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
               <div>
-                <h2 className="text-2xl font-bold text-gray-800">Fila de Triagem Inteligente</h2>
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Fila de Triagem Inteligente</h2>
                 {userRole === 'dev' ? (
                   <div className="flex items-center gap-2 mt-2">
-                    <Filter size={14} className="text-gray-400" />
-                    <span className="text-xs font-bold text-gray-500 uppercase">Simular Localidade:</span>
+                    <Filter size={14} className="text-gray-400 dark:text-slate-500" />
+                    <span className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase">Simular Localidade:</span>
                     <select value={cidadeAtiva} onChange={(e) => setCidadeAtiva(e.target.value)}
-                      className="bg-slate-50 border border-slate-200 text-sm rounded-lg px-2 py-1 text-orange-500 font-bold outline-none cursor-pointer hover:border-orange-500 transition-colors">
+                      className="bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-sm rounded-lg px-2 py-1 text-orange-500 font-bold outline-none cursor-pointer hover:border-orange-500 transition-colors dark:text-orange-400">
                       <option value="São Paulo">São Paulo (BR)</option>
                       <option value="Rio de Janeiro">Rio de Janeiro (BR)</option>
                       <option value="Bogotá">Bogotá (CO)</option>
@@ -444,20 +486,20 @@ export function DentistaDashboard() {
                     </select>
                   </div>
                 ) : (
-                  <p className="text-gray-500 text-sm mt-1">Cidade de Atuação: <span className="font-bold text-gray-700">{cidadeAtiva}</span></p>
+                  <p className="text-gray-500 dark:text-slate-400 text-sm mt-1">Cidade de Atuação: <span className="font-bold text-gray-700 dark:text-slate-200">{cidadeAtiva}</span></p>
                 )}
               </div>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500" size={18} />
                 <input type="text" placeholder="Buscar paciente..." value={pesquisa} onChange={(e) => setPesquisa(e.target.value)}
-                  className="pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm w-full md:w-64 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all" />
+                  className="pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm text-gray-800 dark:text-slate-200 placeholder-gray-400 dark:placeholder-slate-400 w-full md:w-64 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all" />
               </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               {/* Lista de pacientes */}
               <div className="lg:col-span-8 space-y-4">
-                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider px-2">Ordenado por IA (Score TdB)</span>
+                <span className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider px-2">Ordenado por IA (Score TdB)</span>
 
                 {carregandoPacientes ? (
                   <>
@@ -473,22 +515,22 @@ export function DentistaDashboard() {
                   />
                 ) : (
                   pacientesFiltrados.map((p, i) => (
-                    <div key={i} className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-orange-200 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative overflow-hidden">
+                    <div key={i} className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md hover:border-orange-200 dark:hover:border-orange-700/60 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative overflow-hidden">
                       <div className={`absolute left-0 top-0 bottom-0 w-1 ${p.score_match >= 70 ? 'bg-red-400' : p.score_match >= 40 ? 'bg-orange-400' : 'bg-green-400'}`} />
                       <div className="flex items-center gap-4 pl-2">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${p.score_match >= 70 ? 'bg-red-50 text-red-600' : 'bg-slate-100 text-slate-600'}`}>
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${p.score_match >= 70 ? 'bg-red-50 dark:bg-red-950/30 text-red-600' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>
                           {p.nome.charAt(0)}
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <h4 className="font-bold text-gray-800 leading-tight cursor-pointer hover:text-orange-500 hover:underline" onClick={() => navigate(`/prontuario/${p.nome}`)}>
+                            <h4 className="font-bold text-gray-800 dark:text-white leading-tight cursor-pointer hover:text-orange-500 hover:underline" onClick={() => navigate(`/prontuario/${p.nome}`)}>
                               {p.nome}
                             </h4>
-                            <span className="bg-slate-50 text-gray-500 text-xs px-2 py-0.5 rounded-md font-semibold border border-slate-100">{p.idade} anos</span>
+                            <span className="bg-slate-50 dark:bg-slate-700 text-gray-500 dark:text-slate-400 text-xs px-2 py-0.5 rounded-md font-semibold border border-slate-100 dark:border-slate-600">{p.idade} anos</span>
                           </div>
                           <div className="flex items-center gap-3 mt-1.5">
-                            <p className="text-xs text-gray-500 flex items-center gap-1 font-medium"><MapPin size={12} /> {p.cidade}, {p.pais}</p>
-                            <p className={`text-xs font-bold flex items-center gap-1 uppercase ${(p.tipo_dor || '').includes('quebrado') || p.tipo_dor === 'forte' ? 'text-red-500' : 'text-gray-500'}`}>
+                            <p className="text-xs text-gray-500 dark:text-slate-400 flex items-center gap-1 font-medium"><MapPin size={12} /> {p.cidade}, {p.pais}</p>
+                            <p className={`text-xs font-bold flex items-center gap-1 uppercase ${(p.tipo_dor || '').includes('quebrado') || p.tipo_dor === 'forte' ? 'text-red-500' : 'text-gray-500 dark:text-slate-400'}`}>
                               <AlertCircle size={12} /> {p.tipo_dor}
                             </p>
                           </div>
@@ -496,13 +538,13 @@ export function DentistaDashboard() {
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="text-right">
-                          <p className="text-xs text-gray-400 font-bold uppercase mb-0.5">Match</p>
+                          <p className="text-xs text-gray-400 dark:text-slate-500 font-bold uppercase mb-0.5">Match</p>
                           <div className="flex items-center justify-end gap-1">
-                            <span className={`text-sm font-bold ${p.score_match >= 70 ? 'text-gray-800' : 'text-gray-500'}`}>{p.score_match}%</span>
+                            <span className={`text-sm font-bold ${p.score_match >= 70 ? 'text-gray-800 dark:text-white' : 'text-gray-500 dark:text-slate-400'}`}>{p.score_match}%</span>
                             {p.score_match >= 70 && <Star size={12} className="text-orange-500 fill-orange-500" />}
                           </div>
                         </div>
-                        <button onClick={() => setPacienteSelecionado(p)} className="bg-white text-orange-500 border border-orange-500 px-4 py-2 rounded-xl font-bold text-xs hover:bg-orange-500 hover:text-white transition-colors">
+                        <button onClick={() => setPacienteSelecionado(p)} className="bg-white dark:bg-transparent text-orange-500 border border-orange-500 px-4 py-2 rounded-xl font-bold text-xs hover:bg-orange-500 hover:text-white transition-colors">
                           Avaliar
                         </button>
                       </div>
@@ -511,30 +553,30 @@ export function DentistaDashboard() {
                 )}
               </div>
 
-              {/* Chat IA */}
-              <div className="lg:col-span-4">
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 flex flex-col h-[550px] sticky top-4 overflow-hidden">
-                  <div className="bg-slate-50 p-4 border-b border-slate-100 flex items-center gap-3">
-                    <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-100 text-orange-500"><MessageSquare size={20} /></div>
+              {/* Chat IA — visível só no desktop */}
+              <div className="hidden lg:block lg:col-span-4">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col h-[550px] sticky top-4 overflow-hidden">
+                  <div className="bg-slate-50 dark:bg-slate-700/40 p-4 border-b border-slate-100 dark:border-slate-700 flex items-center gap-3">
+                    <div className="bg-white dark:bg-slate-700 p-2 rounded-lg shadow-sm border border-slate-100 dark:border-slate-600 text-orange-500"><MessageSquare size={20} /></div>
                     <div>
-                      <h3 className="font-bold text-gray-800 text-sm">Assistente TdB</h3>
-                      <p className="text-xs text-gray-400 font-semibold">Gemini 2.5</p>
+                      <h3 className="font-bold text-gray-800 dark:text-white text-sm">Assistente TdB</h3>
+                      <p className="text-xs text-gray-400 dark:text-slate-500 font-semibold">Gemini 2.5</p>
                     </div>
                   </div>
-                  <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-white">
-                    <div className="self-start bg-slate-50 p-3.5 rounded-2xl rounded-tl-sm text-sm text-gray-600 border border-slate-100">
+                  <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-white dark:bg-slate-800">
+                    <div className="self-start bg-slate-50 dark:bg-slate-700/40 p-3.5 rounded-2xl rounded-tl-sm text-sm text-gray-600 dark:text-slate-300 border border-slate-100 dark:border-slate-700">
                       Doutor, a fila já está priorizada para jovens em vulnerabilidade perto de <strong>{cidadeAtiva}</strong>. Posso te ajudar a analisar algum caso?
                     </div>
                     {respostaIA && (
-                      <div className="self-start bg-orange-50/50 p-3.5 rounded-2xl rounded-tl-sm text-sm text-gray-700 border border-orange-100 whitespace-pre-wrap">{respostaIA}</div>
+                      <div className="self-start bg-orange-50/50 dark:bg-orange-950/20 p-3.5 rounded-2xl rounded-tl-sm text-sm text-gray-700 dark:text-slate-300 border border-orange-100 dark:border-orange-900/40 whitespace-pre-wrap">{respostaIA}</div>
                     )}
-                    {carregandoIA && <div className="text-xs text-gray-400 font-medium animate-pulse pl-2">A pensar...</div>}
+                    {carregandoIA && <div className="text-xs text-gray-400 dark:text-slate-500 font-medium animate-pulse pl-2">A pensar...</div>}
                   </div>
-                  <div className="p-3 bg-white border-t border-slate-100 flex gap-2">
+                  <div className="p-3 bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700 flex gap-2">
                     <input type="text" placeholder="Ex: Qual o caso mais grave?" value={pergunta}
                       onChange={(e) => setPergunta(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && enviarPerguntaIA()}
-                      className="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none" />
+                      className="flex-1 bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm text-gray-800 dark:text-slate-200 placeholder-gray-400 dark:placeholder-slate-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none" />
                     <button onClick={enviarPerguntaIA} className="bg-orange-500 text-white p-2.5 rounded-xl hover:bg-orange-600 transition-colors"><Send size={18} /></button>
                   </div>
                 </div>
@@ -547,10 +589,10 @@ export function DentistaDashboard() {
         {telaAtiva === 'pacientes' && (
           <div className="animate-fade-in max-w-4xl mx-auto">
             <div className="mb-6 flex items-center gap-3">
-              <div className="bg-orange-50 p-3 rounded-xl text-orange-500"><Users size={24} /></div>
+              <div className="bg-orange-50 dark:bg-orange-950/40 p-3 rounded-xl text-orange-500"><Users size={24} /></div>
               <div>
-                <h2 className="text-2xl font-bold text-gray-800">Meus Pacientes Adotados</h2>
-                <p className="text-gray-500 text-sm">Jovens que assumiu o tratamento até aos 18 anos.</p>
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Meus Pacientes Adotados</h2>
+                <p className="text-gray-500 dark:text-slate-400 text-sm">Jovens que assumiu o tratamento até aos 18 anos.</p>
               </div>
             </div>
 
@@ -569,32 +611,32 @@ export function DentistaDashboard() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {meusPacientes.map((p, idx) => (
-                  <div key={idx} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
+                  <div key={idx} className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col justify-between">
                     <div>
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold text-sm">{p.nome.charAt(0)}</div>
                           <div>
-                            <h4 className="font-bold text-gray-800 leading-tight">{p.nome}</h4>
-                            <span className="text-xs text-gray-500 font-medium">{p.idade} anos</span>
+                            <h4 className="font-bold text-gray-800 dark:text-white leading-tight">{p.nome}</h4>
+                            <span className="text-xs text-gray-500 dark:text-slate-400 font-medium">{p.idade} anos</span>
                           </div>
                         </div>
                         <Badge variant="success">Adotado</Badge>
                       </div>
                       <div className="space-y-2 mb-3">
-                        <p className="text-sm text-gray-600 flex items-center gap-2"><Phone size={14} className="text-gray-400" /> {p.telefone || '(11) 90000-0000'}</p>
-                        <p className="text-sm text-gray-600 flex items-center gap-2"><MapPin size={14} className="text-gray-400" /> {p.cidade}, {p.pais}</p>
+                        <p className="text-sm text-gray-600 dark:text-slate-300 flex items-center gap-2"><Phone size={14} className="text-gray-400 dark:text-slate-500" /> {p.telefone || '(11) 90000-0000'}</p>
+                        <p className="text-sm text-gray-600 dark:text-slate-300 flex items-center gap-2"><MapPin size={14} className="text-gray-400 dark:text-slate-500" /> {p.cidade}, {p.pais}</p>
                       </div>
                       <StatusAgendamento oferta={ofertasMapa[p.nome]} temAgendamento={agendamentos.some(a => a.paciente?.nome === p.nome)} />
                     </div>
                     <div className="flex gap-2 mt-4">
-                      <button onClick={() => abrirFicha(p)} className="flex-1 bg-slate-50 text-orange-500 border border-orange-200 py-2.5 rounded-xl font-bold text-sm hover:bg-orange-50 hover:border-orange-500 flex items-center justify-center gap-2 transition-all">
+                      <button onClick={() => abrirFicha(p)} className="flex-1 bg-slate-50 dark:bg-slate-700 text-orange-500 border border-orange-200 dark:border-orange-800/60 py-2.5 rounded-xl font-bold text-sm hover:bg-orange-50 dark:hover:bg-orange-950/30 hover:border-orange-500 flex items-center justify-center gap-2 transition-all">
                         <Calendar size={16} /> Prontuário
                       </button>
-                      <button onClick={() => imprimirRelatorio(p, usuarioLogado)} className="bg-slate-50 text-gray-500 border border-slate-200 px-3 py-2.5 rounded-xl hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all flex items-center justify-center" title="Gerar Relatório">
+                      <button onClick={() => imprimirRelatorio(p, usuarioLogado)} className="bg-slate-50 dark:bg-slate-700 text-gray-500 dark:text-slate-400 border border-slate-200 dark:border-slate-600 px-3 py-2.5 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-950/30 hover:text-blue-600 hover:border-blue-200 transition-all flex items-center justify-center" title="Gerar Relatório">
                         <FileText size={18} />
                       </button>
-                      <button onClick={() => atualizarStatusPaciente(p, 'disponivel')} className="bg-red-50 text-red-500 border border-red-200 px-3 py-2.5 rounded-xl hover:bg-red-100 hover:text-red-600 transition-all flex items-center justify-center" title="Remover paciente">
+                      <button onClick={() => setConfirmarCancelamento(p)} className="bg-red-50 dark:bg-red-950/30 text-red-500 border border-red-200 dark:border-red-900/50 px-3 py-2.5 rounded-xl hover:bg-red-100 dark:hover:bg-red-950/50 hover:text-red-600 transition-all flex items-center justify-center" title="Cancelar adoção">
                         <X size={18} />
                       </button>
                     </div>
@@ -609,10 +651,10 @@ export function DentistaDashboard() {
         {telaAtiva === 'agenda' && (
           <div className="animate-fade-in max-w-4xl mx-auto">
             <div className="mb-6 flex items-center gap-3">
-              <div className="bg-orange-50 p-3 rounded-xl text-orange-500"><Calendar size={24} /></div>
+              <div className="bg-orange-50 dark:bg-orange-950/40 p-3 rounded-xl text-orange-500"><Calendar size={24} /></div>
               <div>
-                <h2 className="text-2xl font-bold text-gray-800">A Minha Agenda Voluntária</h2>
-                <p className="text-gray-500 text-sm">Próximos agendamentos vinculados ao projeto Turma do Bem.</p>
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-white">A Minha Agenda Voluntária</h2>
+                <p className="text-gray-500 dark:text-slate-400 text-sm">Próximos agendamentos vinculados ao Dentista na Nuvem.</p>
               </div>
             </div>
 
@@ -630,26 +672,26 @@ export function DentistaDashboard() {
                 }}
               />
             ) : (
-              <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-                <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-                  <h3 className="font-bold text-gray-800">Próximos Agendamentos</h3>
+              <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
+                <div className="p-6 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-700/30 flex justify-between items-center">
+                  <h3 className="font-bold text-gray-800 dark:text-white">Próximos Agendamentos</h3>
                   <button onClick={() => setTelaAtiva('pacientes')} className="text-orange-500 font-bold text-sm hover:underline">+ Novo Agendamento</button>
                 </div>
-                <div className="divide-y divide-slate-100">
+                <div className="divide-y divide-slate-100 dark:divide-slate-700">
                   {agendamentos.sort((a, b) => a.data.localeCompare(b.data)).map((ag) => {
                     const { diaSemana, diaMes } = formatarDataAgenda(ag.data);
                     return (
-                      <div key={ag.id} className="p-6 flex items-start gap-6 hover:bg-slate-50 transition-colors animate-fade-in">
+                      <div key={ag.id} className="p-6 flex items-start gap-6 hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-colors animate-fade-in">
                         <div className="text-center min-w-16">
-                          <p className="text-xs font-bold text-gray-400 uppercase">{diaSemana}</p>
+                          <p className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase">{diaSemana}</p>
                           <p className="text-2xl font-black text-orange-500">{diaMes}</p>
                         </div>
                         <div className="flex-1">
-                          <h4 className="font-bold text-gray-800 text-lg">{ag.tipo}</h4>
-                          <p className="text-gray-500 text-sm">Paciente: {ag.paciente.nome}</p>
+                          <h4 className="font-bold text-gray-800 dark:text-white text-lg">{ag.tipo}</h4>
+                          <p className="text-gray-500 dark:text-slate-400 text-sm">Paciente: {ag.paciente.nome}</p>
                           <div className="flex items-center gap-4 mt-3">
-                            <span className="bg-orange-50 text-orange-500 px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5"><Clock size={14} /> {ag.hora}</span>
-                            <span className="bg-slate-100 text-gray-600 px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5"><MapPin size={14} /> O seu Consultório</span>
+                            <span className="bg-orange-50 dark:bg-orange-950/30 text-orange-500 px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5"><Clock size={14} /> {ag.hora}</span>
+                            <span className="bg-slate-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5"><MapPin size={14} /> O seu Consultório</span>
                           </div>
                           <button
                             onClick={() => handleConcluirConsulta(ag.id)}
@@ -668,6 +710,31 @@ export function DentistaDashboard() {
         )}
       </main>
 
+      {/* ── Mobile bottom navigation ── */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 shadow-[0_-4px_12px_rgba(0,0,0,0.06)]">
+        <div className="flex">
+          {navItems.map(item => (
+            <button
+              key={item.id}
+              onClick={() => setTelaAtiva(item.id)}
+              className={`flex-1 flex flex-col items-center gap-1 py-3 px-1 transition-colors ${
+                telaAtiva === item.id ? 'text-orange-500' : 'text-slate-400'
+              }`}
+            >
+              <span className="relative">
+                {item.icon}
+                {item.badge > 0 && (
+                  <span className="absolute -top-1.5 -right-2.5 w-4 h-4 bg-orange-500 text-white text-[9px] font-black rounded-full flex items-center justify-center leading-none">
+                    {item.badge > 9 ? '9+' : item.badge}
+                  </span>
+                )}
+              </span>
+              <span className="text-[10px] font-bold leading-none">{item.label.split(' ')[0]}</span>
+            </button>
+          ))}
+        </div>
+      </nav>
+
       {/* ── Modais ── */}
       {pacienteSelecionado && (
         <ModalAvaliarPaciente
@@ -675,6 +742,46 @@ export function DentistaDashboard() {
           onClose={() => setPacienteSelecionado(null)}
           onAdotar={(p) => atualizarStatusPaciente(p, 'adotado')}
         />
+      )}
+
+      {/* ── Modal: confirmar cancelamento de adoção ── */}
+      {confirmarCancelamento && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          onClick={() => setConfirmarCancelamento(null)}
+        >
+          <div
+            className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 border border-slate-100 dark:border-slate-700"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-4 mb-5">
+              <div className="bg-red-50 dark:bg-red-950/30 p-3 rounded-xl shrink-0">
+                <X size={24} className="text-red-500" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-white">Cancelar Adoção</h3>
+                <p className="text-sm text-gray-500 dark:text-slate-400 truncate max-w-xs">{confirmarCancelamento.nome}</p>
+              </div>
+            </div>
+            <p className="text-gray-600 dark:text-slate-300 text-sm mb-8 leading-relaxed">
+              Tem certeza? <strong className="text-gray-800 dark:text-white">{confirmarCancelamento.nome}</strong> voltará para a fila de triagem e ficará disponível para outros dentistas voluntários.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmarCancelamento(null)}
+                className="flex-1 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 text-gray-600 dark:text-slate-300 font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+              >
+                Voltar
+              </button>
+              <button
+                onClick={() => { const p = confirmarCancelamento; setConfirmarCancelamento(null); atualizarStatusPaciente(p, 'disponivel'); }}
+                className="flex-1 px-4 py-3 rounded-xl bg-red-500 text-white font-bold text-sm hover:bg-red-600 transition-colors"
+              >
+                Confirmar cancelamento
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {fichaAtiva && (
@@ -694,6 +801,7 @@ export function DentistaDashboard() {
           onAdicionarSlot={handleAdicionarSlot}
           onRemoverSlot={handleRemoverSlot}
           onEnviarOferta={handleEnviarOferta}
+          onCancelarOferta={handleCancelarOferta}
           setNovaData={setNovaData}
           setNovaHora={setNovaHora}
           setProcedimentoOferta={setProcedimentoOferta}

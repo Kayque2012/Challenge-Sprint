@@ -1,116 +1,194 @@
-# 🦷 Turma do Bem - Otimizando o Atendimento, Transformando Vidas
+# 🦷 Dentista na Nuvem — Challenge FIAP 2025
 
-![Badge em Desenvolvimento](http://img.shields.io/static/v1?label=STATUS&message=CONCLUÍDO&color=FF8C00&style=for-the-badge)
+![Badge Status](http://img.shields.io/static/v1?label=STATUS&message=CONCLUÍDO&color=FF8C00&style=for-the-badge)
 ![Badge React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
 ![Badge TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
 ![Badge TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Badge Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+
+> Plataforma digital de gestão odontológica desenvolvida para a ONG **Turma do Bem**, conectando jovens em vulnerabilidade social a dentistas voluntários de forma gratuita e humanizada.
+
+---
 
 ## 📌 Visão Geral do Projeto
 
-A Turma do Bem (TdB) é a maior rede de voluntariado odontológico do mundo. Nosso projeto visa solucionar os gargalos na triagem e distribuição de pacientes através de uma plataforma web integrada. O sistema conecta jovens em vulnerabilidade social a dentistas voluntários, utilizando um algoritmo de "Score TdB" para priorizar os casos mais graves e otimizar o fluxo de atendimento.
+O **Dentista na Nuvem** é a solução tecnológica da equipe para o desafio proposto pela Turma do Bem (TdB) — a maior rede de voluntariado especializado do mundo. A plataforma centraliza solicitações, automatiza o encaminhamento de mensagens e permite o acompanhamento de cada caso por meio de três painéis especializados (Admin, Dentista e Beneficiário).
+
+O sistema utiliza um algoritmo de **"Score TdB"** para priorizar atendimentos por urgência clínica e situação socioeconômica, integração com **Google Gemini** para triagem inteligente, e **mapa de calor** com React Leaflet para conectar pacientes ao dentista voluntário mais próximo.
 
 ---
 
-## 📌 Nota sobre a Sprint 3 (Simulação Local)
+## 🚀 Links do Projeto
 
-> ⚠️ **Atenção Avaliador:** Para atender estritamente às regras da **Sprint 3**, esta aplicação **não consome APIs externas (sem fetch/axios)**.
-> Todo o fluxo de dados (Cadastro, Login, Triagem e Dashboard) está sendo simulado utilizando o `localStorage` e o estado local do React para fins de demonstração da interface (SPA) e das lógicas de componentização. A integração real com o Back-End (Python) será habilitada na Sprint 4.
-
----
-
-## 🚀 Links do Projeto (Sprint 4)
-
-- **🌍 Deploy na Vercel (Aplicação Online):** [https://challenge-sprint-rose.vercel.app/]
-- **🎥 Vídeo de Apresentação (YouTube):** [link_a_ser_colocado]
-- **💻 Repositório GitHub:** [https://github.com/gcorrea4/Challenge-Sprint]
+- **🌍 Deploy (Vercel):** [challenge-sprint-rose.vercel.app](https://challenge-sprint-rose.vercel.app/)
+- **💻 Repositório GitHub:** [github.com/gcorrea4/Challenge-Sprint](https://github.com/gcorrea4/Challenge-Sprint)
+- **🎥 Vídeo de Apresentação:** [YouTube](https://youtube.com)
 
 ---
 
 ## 🛠️ Tecnologias Utilizadas
 
-A aplicação foi desenvolvida seguindo os princípios de uma Single Page Application (SPA), garantindo performance, tipagem rigorosa e alta responsividade.
+### Frontend
+| Tecnologia | Versão | Descrição |
+|---|---|---|
+| **React** | 18 | Biblioteca principal de UI |
+| **TypeScript** | 5 | Tipagem estática |
+| **Vite** | 8 (Rolldown) | Build tool / bundler |
+| **Tailwind CSS** | v4 | Estilização utility-first (CSS-first config) |
+| **React Router DOM** | 7 | Roteamento SPA |
+| **React Hook Form** | 7 | Validação de formulários |
+| **Framer Motion** | 11 | Animações e transições |
+| **React Leaflet** + **Leaflet.heat** | — | Mapas interativos e heatmap |
+| **Lucide React** | — | Biblioteca de ícones |
+| **Vitest** | — | Testes unitários |
 
-- **Front-end:** React.js com Vite — Alta performance e build ultrarrápido.
-- **Linguagem:** TypeScript — Tipagem estática e segurança no código.
-- **Estilização:** Tailwind CSS — Estilização moderna e responsividade total sem CSS externo.
-- **Navegação:** React Router DOM — Navegação SPA (Single Page Application) fluida.
-- **Formulários e Validação:** React Hook Form — Validação avançada e nativa de formulários.
-- **Ícones:** Lucide React
-- **Integração:** Fetch API Nativa (comunicando com API Java/DDD)
-- **Deploy:** Vercel
+### Backend
+| Tecnologia | Descrição |
+|---|---|
+| **Java / Quarkus** | API REST |
+| **Oracle Database** | Persistência de dados |
+| **Microsoft Azure** | Hospedagem da API |
+
+### Integrações
+| Integração | Uso |
+|---|---|
+| **Google Gemini API** | IA para triagem inteligente e assistente de chat |
+| **Nominatim (OpenStreetMap)** | Geocodificação de cidades para o mapa de calor |
+| **Nota Fiscal Paulista** | Direcionamento de créditos ICMS para a TdB |
 
 ---
 
 ## ✨ Funcionalidades Implementadas
 
-- **Layout 100% Responsivo:** Adaptado perfeitamente para Mobile, Tablet e Desktop.
-- **Navegação SPA:** Transição entre páginas sem recarregamento.
-- **Simulação de Match e Dashboard:** O painel do Dentista exibe uma fila dinâmica (mockada) para demonstrar a geolocalização.
-- **Painéis Exclusivos:** Visão gerencial e gamificada para Dentistas, e interface de impacto para Pacientes.
-- **Sistema de Login Local:** Níveis de acesso e validação de sessão usando `sessionStorage` e `localStorage`.
+- **Triagem Inteligente** — Algoritmo Score TdB prioriza casos por urgência e renda
+- **Match Geográfico** — Heatmap conecta pacientes ao dentista mais próximo
+- **3 Painéis de Acesso** — Admin (gestão global + contatos), Dentista (fila + agendamento + IA), Beneficiário (triagem + acompanhamento)
+- **Status de Solicitação** — Beneficiário acompanha etapas: triagem → análise → dentista atribuído → consulta confirmada
+- **Gestão de Contatos** — Admin visualiza mensagens com status rastreável e roteamento automático por assunto
+- **Programas Apolônias do Bem e Dentista do Bem** — Ambos representados na plataforma
+- **Chatbot com IA** — Widget de chat integrado ao Gemini na página de contato
+- **Prontuário Digital** — Histórico clínico completo
+- **Relatórios** — Exportação em PDF e CSV
+- **Doação via PIX** — Com calculadora de impacto e Nota Fiscal Paulista
+- **Dark Mode** — Tema escuro completo com persistência via localStorage
+- **Layout 100% Responsivo** — Mobile, tablet e desktop
 
 ---
 
 ## 📂 Estrutura de Pastas
 
-A arquitetura do projeto foi dividida de forma modular para facilitar a manutenção e a escalabilidade dos componentes.
-
 ```text
-CHALLENGE-SPRINT/
-├── public/                 # Imagens estáticas principais e assets globais
-├── src/                    # Código fonte da aplicação
-│   ├── components/         # Componentes reutilizáveis (Header, Footer, Cards)
-│   ├── img/                # Ícones e imagens vetoriais do sistema
-│   ├── pages/              # Páginas e Dashboards (Views do React Router)
-│   ├── App.tsx             # Configuração de Rotas Dinâmicas e Estáticas
-│   ├── main.tsx            # Ponto de entrada do React
-│   └── stl.css             # Diretivas do Tailwind CSS
-├── .gitignore              # Arquivos ignorados pelo Git
-├── eslint.config.js        # Regras de linting do projeto
-├── index.html              # Template base da SPA
-├── package.json            # Dependências e scripts do projeto
-├── tailwind.config.js      # Configurações do tema e cores do Tailwind
-└── tsconfig.json           # Configurações do compilador TypeScript
+Projeto cld front/
+├── public/                     # Assets estáticos
+├── src/
+│   ├── components/             # Componentes reutilizáveis
+│   │   ├── Header.tsx          # Navbar com dark mode toggle
+│   │   ├── Footer.tsx          # Rodapé global
+│   │   ├── MapaRota.tsx        # Modal de rota (Leaflet)
+│   │   ├── StatusAgendamento.tsx
+│   │   ├── ModalAvaliarPaciente.tsx
+│   │   ├── ModalFichaAtiva.tsx
+│   │   └── ui.tsx              # Skeleton, EmptyState, Badge
+│   ├── data/
+│   │   └── latamCoordinates.ts # Coordenadas de cidades (gerado por script)
+│   ├── hooks/
+│   │   └── useDarkMode.ts      # Hook de dark mode (localStorage)
+│   ├── img/                    # Imagens estáticas (fotos da equipe, hero)
+│   ├── pages/                  # Páginas roteadas
+│   │   ├── Home.tsx            # Landing page (com Apolônias do Bem)
+│   │   ├── Login.tsx           # Autenticação
+│   │   ├── Cadastro.tsx        # Registro de usuários
+│   │   ├── Sobre.tsx           # Sobre o projeto
+│   │   ├── FAQ.tsx             # Perguntas frequentes
+│   │   ├── QuemSomos.tsx       # Equipe de desenvolvimento
+│   │   ├── Doador.tsx          # Doação PIX + Nota Fiscal Paulista
+│   │   ├── FormularioContato.tsx  # Contato + chatbot IA
+│   │   ├── Formulario.tsx      # Formulário de cadastro detalhado
+│   │   ├── Prontuario.tsx      # Prontuário digital
+│   │   ├── CalculadoraScore.tsx   # Calculadora Score TdB
+│   │   ├── AdminDashboard.tsx  # Painel admin (mapa, usuários, contatos)
+│   │   ├── DentistaDashboard.tsx  # Painel dentista (fila, agendamento, IA)
+│   │   └── PacienteDashboard.tsx  # Painel beneficiário (triagem, histórico)
+│   ├── Routes/
+│   │   └── index.tsx           # Rotas + ProtectedRoute
+│   ├── test/                   # Testes Vitest
+│   │   ├── login.test.tsx
+│   │   ├── routes.test.ts
+│   │   └── scoreUtils.test.ts
+│   ├── utils/                  # Utilitários puros
+│   │   ├── scoreUtils.ts       # Algoritmo Score TdB
+│   │   ├── relatorioUtils.ts   # Geração de relatórios HTML/print
+│   │   └── adminExportUtils.ts # Exportação PDF e CSV
+│   ├── config.ts               # API_URL (com fallback para Azure)
+│   ├── main.tsx                # Entry point
+│   └── stl.css                 # Tailwind CSS v4 + variantes dark mode
+├── index.html
+├── package.json
+├── tsconfig.json
+├── vite.config.ts
+└── vercel.json                 # Rewrites para SPA
 ```
 
 ---
 
 ## 🚀 Como Rodar o Projeto
 
-Este projeto utiliza o **Vite** como ferramenta de build. Não é necessário ter o Vite instalado previamente de forma global; o comando de instalação abaixo baixará tudo o que é necessário.
-
-**Pré-requisito:** Certifique-se de ter o [Node.js](https://nodejs.org/) instalado no seu computador.
-
-1. Faça o clone do repositório ou extraia o arquivo `.zip` fornecido.
-2. Abra a pasta do projeto no seu editor de código (ex: VS Code).
-3. Abra um novo terminal na pasta raiz do projeto e instale todas as dependências:
+**Pré-requisito:** [Node.js 18+](https://nodejs.org/) instalado.
 
 ```bash
+# 1. Clonar o repositório
+git clone https://github.com/gcorrea4/Challenge-Sprint.git
+cd "Challenge-Sprint"
+
+# 2. Instalar dependências
 npm install
-```
 
-4. Após o término da instalação, inicie o servidor de desenvolvimento:
+# 3. (Opcional) Configurar API local
+# Crie .env.local na raiz:
+# VITE_API_URL=http://localhost:8080
 
-```bash
+# 4. Iniciar servidor de desenvolvimento
 npm run dev
+# → http://localhost:5173
 ```
 
-5. O terminal exibirá um link local (geralmente `http://localhost:5173/`). Segure o `Ctrl` e clique no link para abrir a aplicação no seu navegador.
+### Scripts disponíveis
+```bash
+npm run dev           # Servidor de desenvolvimento
+npm run build         # Build de produção
+npm run typecheck     # Verificação TypeScript
+npm run lint          # ESLint
+npm run test          # Testes unitários (Vitest)
+npm run test:coverage # Relatório de cobertura
+npm run check         # Gate pré-commit: TypeScript + ESLint + Testes
+```
 
 ---
-
 
 ## 📸 Screenshots
 
-![Extra Large Screenshot](public\extra-large-screenshot.png)
-![Mobile Screenshot](public\mobile-screenshot.png)
+![Extra Large Screenshot](public/extra-large-screenshot.png)
+![Mobile Screenshot](public/mobile-screenshot.png)
 
 ---
 
-## 👥 Equipe de Desenvolvimento (Turma 1TDSPB)
+## 🏥 Sobre a ONG Turma do Bem
 
-| Nome | RM | GitHub | LinkedIn |
-|---|---|---|---|
-| Gabriel Correa | 567903 | [GitHub](https://github.com/gcorrea4) | [LinkedIn](https://www.linkedin.com/in/gabriel-correa-souza-763135271/) |
-| Kayque Duarte | 567980 | [GitHub](https://github.com/Kayque2012) | [LinkedIn](https://www.linkedin.com/in/kayque-duarte-b24313361/) |
-| Eric Maciel | 567398 | [GitHub](https://github.com/Eric-devops-tech) | [LinkedIn](https://www.linkedin.com/in/eric-maciel-144058389/) |
+A **Turma do Bem** atua desde 1998 conectando dentistas voluntários a jovens que nunca tiveram acesso a cuidados odontológicos. São dois programas principais:
+
+- **Dentista do Bem** — atendimento gratuito para jovens de 11 a 17 anos em vulnerabilidade social
+- **Apolônias do Bem** — cuidado humanizado para mulheres vítimas de violência doméstica
+
+---
+
+## 👥 Equipe de Desenvolvimento (Turma 1TDSPB — FIAP)
+
+| Nome | RM | Papel | GitHub | LinkedIn |
+|---|---|---|---|---|
+| Gabriel Correa | 567903 | Full Stack Developer | [GitHub](https://github.com/gcorrea4) | [LinkedIn](https://www.linkedin.com/in/gabriel-correa-souza-763135271/) |
+| Kayque Duarte | 567980 | Full Stack Developer | [GitHub](https://github.com/Kayque2012) | [LinkedIn](https://www.linkedin.com/in/kayque-duarte-b24313361/) |
+| Eric Maciel | 567398 | Full Stack Developer | [GitHub](https://github.com/Eric-devops-tech) | [LinkedIn](https://www.linkedin.com/in/eric-maciel-144058389/) |
+
+---
+
+© 2026 Dentista na Nuvem — Challenge FIAP 2025 · Projeto acadêmico sem fins lucrativos.

@@ -67,7 +67,7 @@ function BotaoCopiar({ texto }: { texto: string }) {
       onClick={copiar}
       aria-label={`Copiar ${texto}`}
       title="Copiar"
-      className="ml-2 p-1 rounded hover:bg-orange-100 transition-colors text-gray-400 hover:text-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-300"
+      className="ml-2 p-1 rounded hover:bg-orange-100 dark:hover:bg-orange-950/30 transition-colors text-gray-400 hover:text-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-300"
     >
       {copiado ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
     </button>
@@ -94,12 +94,12 @@ function Accordion({ titulo, icone: Icone, aberto, onToggle, children }: Accordi
   }, [aberto]);
 
   return (
-    <section className="border-b border-[#ddd]">
+    <section className="border-b border-[#ddd] dark:border-slate-700">
       <h3 className="m-0">
         <button
           onClick={onToggle}
           aria-expanded={aberto}
-          className="w-full flex items-center justify-between py-4 px-1 bg-transparent border-none cursor-pointer text-[#333] text-[1.1rem] font-semibold hover:text-orange-500 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-2 rounded"
+          className="w-full flex items-center justify-between py-4 px-1 bg-transparent border-none cursor-pointer text-[#333] dark:text-slate-200 text-[1.1rem] font-semibold hover:text-orange-500 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-2 rounded"
         >
           <span className="flex items-center gap-3">
             {Icone && <Icone size={20} className="text-orange-500" />}
@@ -134,7 +134,7 @@ export function Contato() {
   const [redesOpen, setRedesOpen] = useState(false);
 
   return (
-    <main className="bg-[#F5F5DC] min-h-screen font-sans pt-[80px] lg:pt-[120px] overflow-x-hidden">
+    <main className="bg-white dark:bg-slate-900 min-h-screen font-sans pt-20 overflow-x-hidden transition-colors duration-300">
       <div className="flex flex-col md:flex-row items-start gap-10 lg:gap-20 max-w-[1200px] mx-auto my-12 px-5">
 
         {/* ── Coluna esquerda (Acordeões) ── */}
@@ -144,10 +144,10 @@ export function Contato() {
           transition={{ duration: 0.6 }}
           className="flex-1 w-full"
         >
-          <h2 className="text-[#333] text-2xl lg:text-[34px] font-bold mb-2 mt-0">
+          <h2 className="text-[#333] dark:text-white text-2xl lg:text-[34px] font-bold mb-2 mt-0">
             Contatos da empresa
           </h2>
-          <p className="text-gray-500 text-sm mb-10">
+          <p className="text-gray-500 dark:text-slate-400 text-sm mb-10">
             Entre em contato conosco por qualquer um dos canais abaixo.
           </p>
 
@@ -160,7 +160,7 @@ export function Contato() {
           >
             <ul className="list-none p-0 m-0 space-y-3">
               {CONTATOS.map((c) => (
-                <li key={c.label} className="flex items-center gap-3 text-[#333]">
+                <li key={c.label} className="flex items-center gap-3 text-[#333] dark:text-slate-200">
                   <c.icon size={16} className="text-orange-400 shrink-0" />
                   <span>
                     <strong className="text-sm">{c.label}:</strong>{' '}
@@ -187,7 +187,7 @@ export function Contato() {
             onToggle={() => setLocalizacaoOpen(!localizacaoOpen)}
           >
             <div className="space-y-4">
-              <p className="text-[#333] m-0 leading-relaxed text-sm">
+              <p className="text-[#333] dark:text-slate-200 m-0 leading-relaxed text-sm">
                 <MapPin size={14} className="inline mr-1 text-orange-400" />
                 {ENDERECO.rua}
                 <br />
@@ -195,14 +195,14 @@ export function Contato() {
               </p>
 
               {/* Horário de funcionamento */}
-              <div className="bg-orange-50 rounded-lg p-4 border border-orange-100">
-                <h4 className="flex items-center gap-2 text-sm font-semibold text-[#333] m-0 mb-3">
+              <div className="bg-orange-50 dark:bg-orange-950/30 rounded-lg p-4 border border-orange-100 dark:border-orange-900/50">
+                <h4 className="flex items-center gap-2 text-sm font-semibold text-[#333] dark:text-slate-200 m-0 mb-3">
                   <Clock size={16} className="text-orange-500" />
                   Horário de funcionamento
                 </h4>
                 <ul className="list-none p-0 m-0 space-y-1">
                   {HORARIOS.map((h) => (
-                    <li key={h.dia} className="flex justify-between text-sm text-[#555]">
+                    <li key={h.dia} className="flex justify-between text-sm text-[#555] dark:text-slate-400">
                       <span>{h.dia}</span>
                       <span className="font-medium">{h.horario}</span>
                     </li>
@@ -227,7 +227,7 @@ export function Contato() {
                   target="_blank"
                   rel="noreferrer"
                   aria-label={`Visitar ${r.nome}`}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-[#333] text-sm font-medium hover:border-orange-400 hover:text-orange-500 hover:shadow-sm transition-all no-underline focus:outline-none focus:ring-2 focus:ring-orange-300"
+                  className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg text-[#333] dark:text-slate-200 text-sm font-medium hover:border-orange-400 hover:text-orange-500 hover:shadow-sm transition-all no-underline focus:outline-none focus:ring-2 focus:ring-orange-300"
                 >
                   <r.icon size={18} />
                   {r.nome}
@@ -244,7 +244,7 @@ export function Contato() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="flex-1 w-full"
         >
-          <div className="sticky top-[140px]">
+          <div className="sticky top-20">
             <iframe
               src={MAPA_URL}
               title="Localização da Turma do Bem no Google Maps"
@@ -256,11 +256,11 @@ export function Contato() {
             />
 
             {/* Card de endereço abaixo do mapa */}
-            <div className="mt-4 bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex items-start gap-3 transition-shadow duration-300 hover:shadow-md">
+            <div className="mt-4 bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-slate-700 flex items-start gap-3 transition-shadow duration-300 hover:shadow-md">
               <MapPin size={20} className="text-orange-500 shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-semibold text-[#333] m-0">{ENDERECO.rua}</p>
-                <p className="text-xs text-gray-500 m-0 mt-1">
+                <p className="text-sm font-semibold text-[#333] dark:text-white m-0">{ENDERECO.rua}</p>
+                <p className="text-xs text-gray-500 dark:text-slate-400 m-0 mt-1">
                   {ENDERECO.bairro}, {ENDERECO.cidade}
                 </p>
               </div>
