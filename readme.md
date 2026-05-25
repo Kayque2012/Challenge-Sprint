@@ -21,7 +21,8 @@ O sistema utiliza um algoritmo de **"Score TdB"** para priorizar atendimentos po
 ## 🚀 Links do Projeto
 
 - **🌍 Deploy (Vercel):** [testando-three-xi.vercel.app](https://testando-three-xi.vercel.app/)
-- **💻 Repositório GitHub:** [github.com/Kayque2012/Challenge-Sprint](https://github.com/Kayque2012/Challenge-Sprint)
+- **💻 Repositório Frontend:** [github.com/Kayque2012/Challenge-Sprint](https://github.com/Kayque2012/Challenge-Sprint)
+- **⚙️ Repositório Backend:** [github.com/Kayque2012/Challenge-backend](https://github.com/Kayque2012/Challenge-backend)
 - **🎥 Vídeo de Apresentação:** [YouTube](https://youtube.com)
 
 ---
