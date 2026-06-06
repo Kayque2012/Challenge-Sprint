@@ -77,11 +77,11 @@ export function Formulario() {
     }
   };
 
-  const inputClass = 'w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-gray-800 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-400 focus:bg-white dark:focus:bg-slate-600 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all duration-200';
+  const inputClass = 'w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-gray-800 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-400 focus:bg-white dark:focus:bg-slate-600 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all duration-200';
 
   return (
-    <main className="min-h-screen bg-[#F5F5DC] dark:bg-slate-900 py-12 px-4 font-sans flex justify-center items-start md:items-center pt-[100px] transition-colors duration-300">
-      <div className="bg-white dark:bg-slate-800 w-full max-w-3xl rounded-[24px] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] border border-gray-100 dark:border-slate-700 overflow-hidden">
+    <main className="min-h-screen py-12 px-4 font-sans flex justify-center items-start md:items-center pt-[100px] transition-colors duration-300 bg-[#F5F5DC] dark:bg-[#080c17]">
+      <div className="bg-white dark:bg-slate-900 w-full max-w-3xl rounded-[24px] shadow-[0_20px_60px_rgba(0,0,0,0.08)] border border-gray-100 dark:border-slate-800 overflow-hidden">
 
         <div className="bg-gray-50/50 dark:bg-slate-700/30 p-8 pb-6 text-center border-b border-gray-100 dark:border-slate-700">
           <div className="w-14 h-14 bg-orange-100 dark:bg-orange-950/30 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-orange-200 dark:border-orange-900/50">
@@ -270,7 +270,7 @@ export function Formulario() {
 
           <div className="pt-6 mt-6 border-t border-gray-100 dark:border-slate-700">
             <button type="submit" disabled={isSubmitting}
-              className="w-full bg-gradient-to-r from-[#FF8C00] to-[#f39c12] text-white font-bold text-lg py-4 rounded-xl shadow-[0_8px_20px_rgba(255,140,0,0.25)] hover:shadow-[0_10px_25px_rgba(255,140,0,0.35)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed">
+              className="w-full bg-gradient-to-r from-[#FF8C00] to-[#f39c12] text-white font-bold text-lg py-4 rounded-xl shadow-[0_8px_24px_rgba(255,140,0,0.28)] hover:shadow-[0_12px_36px_rgba(255,140,0,0.40)] hover:-translate-y-0.5 active:scale-95 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed">
               {isSubmitting ? 'A enviar...' : 'Enviar para Triagem'}
             </button>
             <p className="text-center text-xs text-gray-400 dark:text-slate-500 mt-4">

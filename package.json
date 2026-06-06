@@ -16,9 +16,11 @@
     "coords:update": "node scripts/generateCoordinates.mjs"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.4.0",
     "@tailwindcss/postcss": "^4.2.2",
     "@tailwindcss/vite": "^4.2.2",
     "autoprefixer": "^10.4.27",
+    "clsx": "^2.1.1",
     "framer-motion": "^12.38.0",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
@@ -31,7 +33,9 @@
     "react-hook-form": "^7.72.1",
     "react-leaflet": "^5.0.0",
     "react-router-dom": "^7.13.2",
-    "tailwindcss": "^4.2.2"
+    "sonner": "^2.0.7",
+    "tailwindcss": "^4.2.2",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",

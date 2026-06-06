@@ -134,8 +134,8 @@ export function Contato() {
   const [redesOpen, setRedesOpen] = useState(false);
 
   return (
-    <main className="bg-white dark:bg-slate-900 min-h-screen font-sans pt-20 overflow-x-hidden transition-colors duration-300">
-      <div className="flex flex-col md:flex-row items-start gap-10 lg:gap-20 max-w-[1200px] mx-auto my-12 px-5">
+    <main className="min-h-screen font-sans pt-20 overflow-x-hidden transition-colors duration-300 bg-[#F5F5DC] dark:bg-[#080c17]">
+      <div className="flex flex-col md:flex-row items-start gap-10 lg:gap-20 max-w-[1200px] mx-auto my-12 px-5 pb-12">
 
         {/* ── Coluna esquerda (Acordeões) ── */}
         <motion.div 
@@ -144,7 +144,7 @@ export function Contato() {
           transition={{ duration: 0.6 }}
           className="flex-1 w-full"
         >
-          <h2 className="text-[#333] dark:text-white text-2xl lg:text-[34px] font-bold mb-2 mt-0">
+          <h2 className="text-gray-900 dark:text-white text-2xl lg:text-[34px] font-black mb-2 mt-0">
             Contatos da empresa
           </h2>
           <p className="text-gray-500 dark:text-slate-400 text-sm mb-10">
@@ -173,7 +173,7 @@ export function Contato() {
 
             <Link
               to="/FormularioContato"
-              className="mt-6 inline-flex items-center gap-2 bg-orange-500 text-white px-5 py-2.5 rounded-lg font-semibold text-sm hover:bg-orange-600 transition-colors shadow-sm hover:shadow-md no-underline focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-2"
+              className="mt-6 inline-flex items-center gap-2 bg-orange-500 text-white px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-orange-600 transition-all shadow-[0_4px_16px_rgba(255,140,0,0.28)] hover:shadow-[0_6px_24px_rgba(255,140,0,0.38)] active:scale-95 no-underline focus:outline-none"
             >
               <Send size={16} />
               Enviar mensagem pelo formulário
@@ -252,11 +252,11 @@ export function Contato() {
               allowFullScreen
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
-              className="w-full h-[300px] sm:h-[350px] md:h-[400px] lg:h-[500px] border-none rounded-xl shadow-lg"
+              className="w-full h-[300px] sm:h-[350px] md:h-[400px] lg:h-[500px] border-none rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.10)]"
             />
 
             {/* Card de endereço abaixo do mapa */}
-            <div className="mt-4 bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-slate-700 flex items-start gap-3 transition-shadow duration-300 hover:shadow-md">
+            <div className="mt-4 bg-white dark:bg-slate-900 rounded-xl p-4 border border-gray-100 dark:border-slate-800 flex items-start gap-3 transition-all duration-300 hover:shadow-[0_8px_30px_rgba(255,140,0,0.08)] hover:border-orange-200 dark:hover:border-orange-500/25 hover:-translate-y-0.5">
               <MapPin size={20} className="text-orange-500 shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-semibold text-[#333] dark:text-white m-0">{ENDERECO.rua}</p>

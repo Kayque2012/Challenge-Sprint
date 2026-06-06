@@ -1,5 +1,6 @@
 import { Navigate } from 'react-router-dom';
 import type { ReactNode } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 
 interface ProtectedRouteProps {
   allowedRoles: string[];
@@ -7,10 +8,9 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ allowedRoles, children }: ProtectedRouteProps) {
-  const usuarioLogado = sessionStorage.getItem('usuarioLogado');
-  const userRole = sessionStorage.getItem('userRole') ?? '';
+  const { user } = useAuth();
 
-  if (!usuarioLogado || !allowedRoles.includes(userRole)) {
+  if (!user || !allowedRoles.includes(user.role)) {
     return <Navigate to="/login" replace />;
   }
 

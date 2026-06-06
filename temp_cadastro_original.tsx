@@ -5,7 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { DADOS_PAISES } from '../data/estadosCidades';
 import { API_URL } from '../config';
 import {
-  User, Stethoscope, Eye, EyeOff, Mail, Lock,
+  Cloud, User, Stethoscope, Eye, EyeOff, Mail, Lock,
   MapPin, Globe, CheckCircle2, AlertCircle, ArrowRight,
   Shield, Users, Smile,
 } from 'lucide-react';
@@ -140,24 +140,21 @@ export function Cadastro() {
   };
 
   const inputBase =
-    'w-full rounded-xl border-2 bg-white dark:bg-slate-700 px-4 py-3 text-sm text-gray-800 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-400 focus:outline-none focus:bg-white dark:focus:bg-slate-600 transition-all';
+    'w-full rounded-xl border-2 bg-gray-50 dark:bg-slate-700 px-4 py-3 text-sm text-gray-800 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-400 focus:outline-none focus:bg-white dark:focus:bg-slate-600 transition-all';
   const inputClass = (hasError: boolean) =>
-    `${inputBase} ${hasError ? 'border-red-400 focus:border-red-500' : 'border-gray-200 dark:border-slate-600 focus:border-[#FF8C00]'}`;
+    `${inputBase} ${hasError ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#FF8C00]'}`;
 
   return (
-    <div className="min-h-screen flex items-start justify-center pt-16 pb-10 px-4 font-sans bg-[#F5F5DC] dark:bg-[#080c17]">
-      <div className="w-full max-w-5xl bg-white dark:bg-slate-900 rounded-3xl shadow-[0_24px_70px_rgba(0,0,0,0.08)] border border-gray-100 dark:border-slate-800 overflow-hidden flex my-6">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50/40 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex items-start justify-center pt-16 pb-10 px-4 font-sans">
+      <div className="w-full max-w-5xl bg-white dark:bg-slate-800 rounded-3xl shadow-2xl shadow-orange-100/60 dark:shadow-slate-900/50 overflow-hidden flex my-6">
 
         {/* ── Painel esquerdo — branding (desktop only) ── */}
-        <div className="hidden lg:flex flex-col justify-center w-[360px] flex-shrink-0 bg-gradient-to-br from-[#FF8C00] to-orange-600 text-white p-10 relative overflow-hidden gap-8">
-
-          {/* Orbs decorativos */}
-          <div className="absolute -right-10 -top-10 w-44 h-44 bg-white/10 rounded-full pointer-events-none" />
-          <div className="absolute -left-8  -bottom-8 w-36 h-36 bg-white/10 rounded-full pointer-events-none" />
-          <div className="absolute right-8   bottom-24 w-16 h-16 bg-white/10 rounded-full pointer-events-none" />
-          <div className="absolute left-1/2 top-1/3   w-10 h-10 bg-white/5  rounded-full pointer-events-none" />
-
-          <div className="relative z-10">
+        <div className="hidden lg:flex flex-col justify-between w-[360px] flex-shrink-0 bg-gradient-to-br from-[#FF8C00] to-orange-600 text-white p-10">
+          <div>
+            <div className="flex items-center gap-2 mb-12">
+              <Cloud size={22} className="text-white" />
+              <span className="font-black text-xl tracking-tight">Dentista na Nuvem</span>
+            </div>
             <h2 className="text-3xl font-black leading-snug mb-4">
               Junte-se a nós e transforme sorrisos
             </h2>
@@ -166,14 +163,14 @@ export function Cadastro() {
             </p>
           </div>
 
-          <div className="relative z-10 space-y-3">
+          <div className="space-y-4">
             {[
               { icon: <Smile size={17} />, text: '2.400+ beneficiários atendidos' },
               { icon: <Stethoscope size={17} />, text: '180+ dentistas voluntários' },
               { icon: <Shield size={17} />, text: 'Dados protegidos e seguros' },
             ].map(item => (
-              <div key={item.text} className="flex items-center gap-3 bg-white/10 rounded-2xl px-4 py-3">
-                <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+              <div key={item.text} className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
                   {item.icon}
                 </div>
                 <span className="text-sm font-medium text-orange-50">{item.text}</span>
@@ -181,6 +178,10 @@ export function Cadastro() {
             ))}
           </div>
 
+          <p className="text-xs text-orange-200 mt-8">
+            Já tem conta?{' '}
+            <Link to="/login" className="text-white font-bold underline underline-offset-2">Faça login</Link>
+          </p>
         </div>
 
         {/* ── Painel direito — formulário ── */}
@@ -194,8 +195,8 @@ export function Cadastro() {
           {mensagem.texto && (
             <div className={`flex items-center gap-3 p-4 mb-6 rounded-xl text-sm font-semibold border ${
               mensagem.tipo === 'sucesso'
-                ? 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-900/50'
-                : 'bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/50'
+                ? 'bg-green-50 text-green-700 border-green-200'
+                : 'bg-red-50 text-red-600 border-red-200'
             }`}>
               {mensagem.tipo === 'sucesso'
                 ? <CheckCircle2 size={18} className="flex-shrink-0" />
@@ -481,7 +482,7 @@ export function Cadastro() {
                   <button
                     type="button"
                     onClick={() => setMostrarSenha(!mostrarSenha)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                     tabIndex={-1}
                   >
                     {mostrarSenha ? <EyeOff size={15} /> : <Eye size={15} />}
@@ -524,7 +525,7 @@ export function Cadastro() {
                   <button
                     type="button"
                     onClick={() => setMostrarConfirma(!mostrarConfirma)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                     tabIndex={-1}
                   >
                     {mostrarConfirma ? <EyeOff size={15} /> : <Eye size={15} />}
@@ -537,7 +538,7 @@ export function Cadastro() {
             {/* Botão submit */}
             <button
               type="submit"
-              className="w-full flex items-center justify-center gap-2 bg-[#FF8C00] hover:bg-orange-600 text-white py-3.5 rounded-xl font-bold text-sm tracking-wide transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_28px_rgba(255,140,0,0.38)] active:scale-95 mt-2"
+              className="w-full flex items-center justify-center gap-2 bg-[#FF8C00] hover:bg-orange-600 text-white py-3.5 rounded-xl font-bold text-sm tracking-wide transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-orange-200 mt-2"
             >
               Concluir Registro
               <ArrowRight size={17} />

@@ -110,7 +110,7 @@ function ChatBot() {
               onChange={e => setInputVal(e.target.value)}
               placeholder="Digite sua dúvida..."
               aria-label="Digite sua pergunta"
-              className="flex-1 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl px-3 py-2 text-sm text-gray-800 dark:text-slate-200 placeholder-gray-400 dark:placeholder-slate-400 outline-none focus:border-[#FF8C00]"
+              className="flex-1 bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl px-3 py-2 text-sm text-gray-800 dark:text-slate-200 placeholder-gray-400 dark:placeholder-slate-400 outline-none focus:border-[#FF8C00]"
             />
             <button
               type="submit"
@@ -162,9 +162,9 @@ export function FormularioContato() {
   };
 
   return (
-    <main className="min-h-screen bg-[#F5F5DC] dark:bg-slate-900 flex justify-center items-center py-[120px] px-4 font-sans transition-colors duration-300">
+    <main className="min-h-screen flex justify-center items-center py-[120px] px-4 font-sans transition-colors duration-300 bg-[#F5F5DC] dark:bg-[#080c17]">
 
-      <div className="bg-white dark:bg-slate-800 w-full max-w-3xl rounded-[24px] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] border border-gray-100 dark:border-slate-700 overflow-hidden relative">
+      <div className="bg-white dark:bg-slate-900 w-full max-w-3xl rounded-[24px] shadow-[0_20px_60px_rgba(0,0,0,0.08)] border border-gray-100 dark:border-slate-800 overflow-hidden relative">
 
         {/* BOTÃO DE VOLTAR - Modernizado */}
         <div className="absolute top-6 left-6 z-10">
@@ -200,7 +200,7 @@ export function FormularioContato() {
                   type="text" 
                   placeholder="Ex: João da Silva"
                   {...register("nome", { required: true })}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-gray-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-600 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all duration-200"
+                  className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-gray-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-600 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all duration-200"
                 />
               </div>
               {errors.nome && <span className="text-red-500 text-xs mt-1.5 block font-medium">Nome é obrigatório</span>}
@@ -217,7 +217,7 @@ export function FormularioContato() {
                   type="email" 
                   placeholder="exemplo@email.com"
                   {...register("email", { required: true, pattern: /^\S+@\S+$/i })}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-gray-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-600 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all duration-200"
+                  className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-gray-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-600 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all duration-200"
                 />
               </div>
               {errors.email && <span className="text-red-500 text-xs mt-1.5 block font-medium">E-mail inválido</span>}
@@ -232,7 +232,7 @@ export function FormularioContato() {
                 </div>
                 <select 
                   {...register("assunto", { required: true })}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-gray-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-600 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all duration-200 appearance-none cursor-pointer font-medium"
+                  className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-gray-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-600 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all duration-200 appearance-none cursor-pointer font-medium"
                 >
                   <option value="" disabled>Selecione o motivo do contato...</option>
                   <option value="Dúvida Geral">Dúvida Geral</option>
@@ -256,7 +256,7 @@ export function FormularioContato() {
                   rows={5}
                   placeholder="Escreva aqui a sua mensagem..."
                   {...register("mensagem", { required: true })}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-gray-800 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-400 focus:bg-white dark:focus:bg-slate-600 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all duration-200 resize-none leading-relaxed"
+                  className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-gray-800 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-400 focus:bg-white dark:focus:bg-slate-600 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all duration-200 resize-none leading-relaxed"
                 />
               </div>
               {errors.mensagem && <span className="text-red-500 text-xs mt-1.5 block font-medium">A mensagem não pode estar vazia</span>}
@@ -266,12 +266,12 @@ export function FormularioContato() {
 
           <div className="pt-6 mt-6 border-t border-gray-100 dark:border-slate-700">
             {erro && (
-              <p className="text-red-600 text-sm font-semibold text-center mb-4 bg-red-50 border border-red-200 rounded-xl py-2 px-4">{erro}</p>
+              <p className="text-red-600 dark:text-red-400 text-sm font-semibold text-center mb-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 rounded-xl py-2 px-4">{erro}</p>
             )}
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-[#FF8C00] to-[#f39c12] text-white font-bold text-lg py-4 rounded-xl shadow-[0_8px_20px_rgba(255,140,0,0.25)] hover:shadow-[0_10px_25px_rgba(255,140,0,0.35)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+              className="w-full bg-gradient-to-r from-[#FF8C00] to-[#f39c12] text-white font-bold text-lg py-4 rounded-xl shadow-[0_8px_24px_rgba(255,140,0,0.28)] hover:shadow-[0_12px_36px_rgba(255,140,0,0.40)] hover:-translate-y-0.5 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
             >
               <Send size={20} />
               {isLoading ? 'Enviando...' : 'Enviar Mensagem'}

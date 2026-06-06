@@ -14,12 +14,13 @@ export function Reconhecimentos() {
   ];
 
   return (
-    <main className="min-h-screen bg-white dark:bg-slate-900 font-sans transition-colors duration-300">
+    <main className="min-h-screen font-sans transition-colors duration-300 bg-[#F5F5DC] dark:bg-[#080c17]">
 
       {/* ── Hero ── */}
       <div className="bg-gradient-to-br from-[#FF8C00] via-[#F5820A] to-[#E06000] pt-24 pb-20 px-4 relative overflow-hidden">
         <div className="absolute -right-20 -top-20 w-80 h-80 bg-white/10 rounded-full pointer-events-none" />
         <div className="absolute -left-10 bottom-0 w-60 h-60 bg-white/10 rounded-full pointer-events-none" />
+        <div className="absolute inset-0 opacity-[0.07] pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.6) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.6) 1px,transparent 1px)', backgroundSize: '48px 48px' }} />
         <div className="max-w-3xl mx-auto text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
@@ -89,10 +90,10 @@ export function Reconhecimentos() {
                 </div>
 
                 {/* Card */}
-                <div className={`flex-1 mb-2 p-6 rounded-2xl border transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 ${
+                <div className={`flex-1 mb-2 p-6 rounded-2xl border transition-all duration-300 hover:-translate-y-0.5 ${
                   premio.destaque
-                    ? 'bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-900/50 hover:shadow-orange-100'
-                    : 'bg-white dark:bg-slate-800 border-gray-100 dark:border-slate-700 hover:border-orange-200 dark:hover:border-orange-800/60'
+                    ? 'bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-900/50 hover:shadow-[0_8px_30px_rgba(255,140,0,0.14)]'
+                    : 'bg-white dark:bg-slate-900 border-gray-100 dark:border-slate-800 hover:border-orange-200 dark:hover:border-orange-500/30 hover:shadow-[0_8px_30px_rgba(255,140,0,0.07)]'
                 }`}>
                   <div className="flex items-start justify-between gap-4 mb-2">
                     <h3 className={`font-black text-lg leading-tight ${premio.destaque ? 'text-orange-700 dark:text-orange-400' : 'text-gray-900 dark:text-white'}`}>
@@ -119,7 +120,7 @@ export function Reconhecimentos() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="mt-16 text-center bg-gradient-to-br from-orange-50 dark:from-slate-800 to-white dark:to-slate-800 border border-orange-100 dark:border-slate-700 rounded-3xl p-10"
+          className="mt-16 text-center bg-white dark:bg-slate-900 border border-orange-100 dark:border-slate-800 rounded-3xl p-10 shadow-[0_8px_30px_rgba(255,140,0,0.06)] hover:shadow-[0_12px_40px_rgba(255,140,0,0.10)] transition-shadow duration-300"
         >
           <Trophy size={32} className="text-orange-400 mx-auto mb-4" />
           <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-2">Uma história de impacto real</h3>

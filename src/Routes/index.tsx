@@ -1,5 +1,7 @@
-import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Outlet, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Header } from '../components/Header';
+import { ScrollToTop } from '../components/ScrollToTop';
 import { ProtectedRoute } from '../components/ProtectedRoute';
 import { Footer } from '../components/Footer';
 import { Home } from '../pages/Home';
@@ -18,13 +20,23 @@ import { CalculadoraScore } from '../pages/CalculadoraScore';
 import { FormularioContato } from '../pages/FormularioContato';
 import { Prontuario } from '../pages/Prontuario';
 import { Doador } from '../pages/Doador';
+import { ApoloniasDoBem } from '../pages/ApoloniasDoBem';
 
 // Layout com Header + Footer para páginas públicas e utilitários
 function PublicLayout() {
+  const location = useLocation();
   return (
-    <div className="min-h-screen flex flex-col bg-[#F5F5DC]">
+    <div className="min-h-screen flex flex-col bg-[#F5F5DC] dark:bg-[#080c17]">
       <Header />
-      <div className="flex-grow"><Outlet /></div>
+      <motion.div
+        key={location.pathname}
+        className="flex-grow"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: 'easeOut' }}
+      >
+        <Outlet />
+      </motion.div>
       <Footer />
     </div>
   );
@@ -48,6 +60,7 @@ function PublicLayout() {
 export function AppRoutes() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         {/* ── Páginas com Header + Footer ── */}
         <Route element={<PublicLayout />}>
@@ -64,6 +77,7 @@ export function AppRoutes() {
           <Route path="/Calculadora/Score" element={<CalculadoraScore />} />
           <Route path="/FormularioContato" element={<FormularioContato />} />
           <Route path="/prontuario/:nome"  element={<Prontuario />} />
+          <Route path="/apolonias-do-bem" element={<ApoloniasDoBem />} />
         </Route>
 
         {/* ── Dashboards protegidos — sem Header/Footer ── */}

@@ -30,9 +30,9 @@ export function Doador() {
 
     if (valor >= 500) {
       return (
-        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-orange-200 dark:border-orange-900/50 flex items-center gap-6 relative overflow-hidden animate-fade-in">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-orange-200 dark:border-orange-900/50 flex items-center gap-6 relative overflow-hidden animate-fade-in shadow-[0_4px_24px_rgba(255,140,0,0.10)] hover:shadow-[0_8px_32px_rgba(255,140,0,0.18)] transition-shadow duration-300">
           <div className="absolute top-0 right-0 bg-[#FF8C00] text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wider">Maior Impacto</div>
-          <div className="bg-orange-50 p-4 rounded-full text-[#FF8C00]"><ShieldAlert size={32} /></div>
+          <div className="bg-orange-50 dark:bg-orange-950/30 p-4 rounded-full text-[#FF8C00]"><ShieldAlert size={32} /></div>
           <div>
             <h3 className="font-black text-xl text-orange-600">Transformação Completa</h3>
             <p className="text-gray-600 dark:text-slate-300 font-medium mt-1">Seu apoio patrocina custos laboratoriais e radiográficos de tratamentos complexos (como canal e próteses).</p>
@@ -41,8 +41,8 @@ export function Doador() {
       );
     } else if (valor >= 150) {
       return (
-        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-green-200 dark:border-green-900/50 flex items-center gap-6 animate-fade-in">
-          <div className="bg-green-50 p-4 rounded-full text-green-500"><Syringe size={32} /></div>
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-green-200 dark:border-green-900/50 flex items-center gap-6 animate-fade-in shadow-[0_4px_24px_rgba(34,197,94,0.10)] hover:shadow-[0_8px_32px_rgba(34,197,94,0.18)] transition-shadow duration-300">
+          <div className="bg-green-50 dark:bg-green-950/30 p-4 rounded-full text-green-500"><Syringe size={32} /></div>
           <div>
             <h3 className="font-black text-xl text-green-600">Tratamento Clínico</h3>
             <p className="text-gray-600 dark:text-slate-300 font-medium mt-1">Custeia anestésicos, resinas e materiais descartáveis para uma ou mais consultas de restauração.</p>
@@ -51,7 +51,7 @@ export function Doador() {
       );
     } else if (valor > 0) {
       return (
-        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-orange-200 dark:border-orange-900/50 flex items-center gap-6 animate-fade-in">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-orange-200 dark:border-orange-900/50 flex items-center gap-6 animate-fade-in shadow-[0_4px_24px_rgba(255,140,0,0.08)] hover:shadow-[0_8px_32px_rgba(255,140,0,0.15)] transition-shadow duration-300">
           <div className="bg-orange-50 dark:bg-orange-950/30 p-4 rounded-full text-[#FF8C00]"><Smile size={32} /></div>
           <div>
             <h3 className="font-black text-xl text-[#FF8C00]">Prevenção e Higiene</h3>
@@ -62,7 +62,7 @@ export function Doador() {
     }
 
     return (
-      <div className="bg-gray-50 dark:bg-slate-800 p-6 rounded-2xl border border-gray-200 dark:border-slate-700 flex items-center gap-6 animate-fade-in">
+      <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-gray-200 dark:border-slate-700 flex items-center gap-6 animate-fade-in">
         <div className="bg-gray-200 dark:bg-slate-700 p-4 rounded-full text-gray-500 dark:text-slate-400"><Info size={32} /></div>
         <div>
           <h3 className="font-bold text-lg text-gray-600 dark:text-slate-300">Apoie a Turma do Bem</h3>
@@ -73,9 +73,12 @@ export function Doador() {
   };
 
   return (
-    <main className="min-h-screen bg-white dark:bg-slate-900 font-sans pb-12 transition-colors duration-300">
+    <main className="min-h-screen font-sans pb-12 transition-colors duration-300 bg-[#F5F5DC] dark:bg-[#080c17]">
 
-      <div className="bg-[#FF8C00] text-white pt-24 pb-20 px-6 text-center relative overflow-hidden">
+      <div className="bg-gradient-to-br from-[#FF8C00] via-[#F5820A] to-[#E06000] text-white pt-24 pb-20 px-6 text-center relative overflow-hidden">
+        <div className="absolute -right-20 -top-20 w-72 h-72 bg-white/10 rounded-full pointer-events-none" />
+        <div className="absolute -left-10 bottom-0 w-56 h-56 bg-white/10 rounded-full pointer-events-none" />
+        <div className="absolute inset-0 opacity-[0.07] pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.6) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.6) 1px,transparent 1px)', backgroundSize: '48px 48px' }} />
         <div className="absolute top-20 left-4">
           <Link to="/login" className="flex items-center gap-2 text-orange-100 hover:text-white transition-colors font-bold text-sm">
             <ArrowLeft size={18} /> Voltar
@@ -95,7 +98,7 @@ export function Doador() {
           
           <div className="lg:col-span-7 space-y-8">
             
-            <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-md border border-gray-100 dark:border-slate-700">
+            <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-gray-100 dark:border-slate-800 shadow-[0_4px_30px_rgba(0,0,0,0.06)]">
               
               
               <div className="mb-8">
@@ -155,7 +158,7 @@ export function Doador() {
                         setValorDoacao('outro');
                         setValorPersonalizado('');
                       }}
-                      className="col-span-2 md:col-span-3 py-3 rounded-lg text-lg font-medium border border-gray-300 text-gray-500 hover:border-[#00CED1] hover:text-[#00CED1] transition-all duration-200"
+                      className="col-span-2 md:col-span-3 py-3 rounded-lg text-lg font-medium border border-gray-300 dark:border-slate-600 text-gray-500 dark:text-slate-400 hover:border-[#00CED1] hover:text-[#00CED1] dark:hover:border-cyan-500 dark:hover:text-cyan-400 transition-all duration-200"
                     >
                       Outro valor
                     </button>
@@ -175,8 +178,8 @@ export function Doador() {
 
           
           <div className="lg:col-span-5">
-            <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-lg border border-gray-100 dark:border-slate-700 p-8 text-center sticky top-8">
-              <div className="w-16 h-16 bg-cyan-50 rounded-2xl mx-auto flex items-center justify-center mb-6 border border-cyan-100">
+            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-gray-100 dark:border-slate-800 p-8 text-center sticky top-8 shadow-[0_8px_40px_rgba(0,0,0,0.07)]">
+              <div className="w-16 h-16 bg-cyan-50 dark:bg-cyan-950/20 rounded-2xl mx-auto flex items-center justify-center mb-6 border border-cyan-100 dark:border-cyan-900/40">
                 <QrCode size={32} className="text-[#00CED1]" />
               </div>
               <h2 className="text-2xl font-black text-gray-800 dark:text-white mb-1">
@@ -189,12 +192,12 @@ export function Doador() {
               <p className="text-gray-500 dark:text-slate-400 text-sm mb-6">Abra o app do seu banco e escaneie o código ou copie a chave CNPJ abaixo.</p>
               
               
-              <div className="w-48 h-48 bg-gray-50 dark:bg-slate-700/40 border-2 border-dashed border-gray-200 dark:border-slate-600 mx-auto rounded-xl flex items-center justify-center mb-8 relative group cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
+              <div className="w-48 h-48 bg-white dark:bg-slate-700/40 border-2 border-dashed border-gray-200 dark:border-slate-600 mx-auto rounded-xl flex items-center justify-center mb-8 relative group cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
                  <QrCode size={80} className="text-gray-300 group-hover:text-[#00CED1] transition-colors" />
                  <p className="absolute bottom-2 text-[10px] font-bold text-gray-400 uppercase">QR Code Ilustrativo</p>
               </div>
 
-              <div className="bg-gray-50 dark:bg-slate-700/40 border border-gray-200 dark:border-slate-600 rounded-xl p-4 flex items-center justify-between gap-3 mb-6">
+              <div className="bg-white dark:bg-slate-700/40 border border-gray-200 dark:border-slate-600 rounded-xl p-4 flex items-center justify-between gap-3 mb-6">
                  <div className="text-left overflow-hidden">
                     <p className="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase">Chave PIX (CNPJ)</p>
                     <p className="font-mono text-gray-800 dark:text-slate-100 font-bold truncate">12.345.678/0001-99</p>

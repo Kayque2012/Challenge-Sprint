@@ -1,7 +1,9 @@
-import { useNavigate } from 'react-router-dom';
 import { useState, useEffect, useMemo } from 'react';
-import { API_URL } from '../config';
-import { LayoutDashboard, Users, LogOut, MapPin, Heart, CalendarDays, Clock, TrendingUp, Smile, DollarSign, Archive, AlertTriangle, CheckCircle2, Search, UserX, FileDown, Sheet, MessageSquare, Mail, Filter, Tag, ChevronDown } from 'lucide-react';
+import { toast } from 'sonner';
+import { adminApi } from '../lib/api';
+import { DashboardLayout } from '../components/layout/DashboardLayout';
+import { LayoutDashboard, Users, MapPin, Heart, CalendarDays, Clock, TrendingUp, Smile, DollarSign, Archive, Search, UserX, FileDown, Sheet, MessageSquare, Mail, Filter, Tag, ChevronDown, Hash, Ticket } from 'lucide-react';
+import { gerarTicket, canalConfig, mascaraCPF } from '../utils/ticketUtils';
 import {
   exportarPacientesPDF, exportarPacientesCSV,
   exportarDentistasPDF, exportarDentistasCSV,
@@ -91,6 +93,7 @@ interface UsuarioPaciente {
   cidade: string;
   pais: string;
   tipoDor?: string;
+  cpf?: string;        // identificador único do paciente
 }
 
 interface UsuarioDentista {
@@ -109,16 +112,18 @@ interface MensagemContato {
   assunto: string;
   mensagem: string;
   criadoEm?: string;
+  canal?: string;      // 'web' | 'telegram' | 'email' | 'whatsapp'
+  ticket?: string;     // Ex.: "TDB-2026-00001"
 }
 
 type StatusContato = 'aberto' | 'em_andamento' | 'concluido';
 
 const CONTATOS_MOCK: MensagemContato[] = [
-  { id: 1, nome: 'Maria Silva', email: 'maria@email.com', assunto: 'Quero ser Doador', mensagem: 'Gostaria de saber como fazer uma doação mensal. Tenho interesse em apoiar a causa dos jovens em vulnerabilidade.', criadoEm: '2026-05-20T10:30:00' },
-  { id: 2, nome: 'Dr. João Santos', email: 'joao@clinica.com.br', assunto: 'Parcerias com Clínicas', mensagem: 'Tenho uma clínica odontológica em São Paulo e gostaria de firmar parceria com a Turma do Bem. Como proceder?', criadoEm: '2026-05-21T14:00:00' },
-  { id: 3, nome: 'Ana Oliveira', email: 'ana@gmail.com', assunto: 'Dúvida Geral', mensagem: 'Minha filha tem 15 anos e nunca foi ao dentista. Como faço para cadastrá-la na plataforma?', criadoEm: '2026-05-22T09:15:00' },
-  { id: 4, nome: 'Pedro Lima', email: 'pedro@jornal.com', assunto: 'Imprensa', mensagem: 'Faço parte da equipe do G1 e gostaria de realizar uma reportagem sobre o trabalho da ONG. Há contato disponível?', criadoEm: '2026-05-23T11:00:00' },
-  { id: 5, nome: 'Carla Mendes', email: 'carla@empresa.com', assunto: 'Outros', mensagem: 'Representamos uma empresa de materiais odontológicos e gostaríamos de fazer doações de insumos. Como podemos contribuir?', criadoEm: '2026-05-23T15:30:00' },
+  { id: 1, nome: 'Maria Silva',    email: 'maria@email.com',       assunto: 'Quero ser Doador',        canal: 'web',      ticket: 'TDB-2026-00001', mensagem: 'Gostaria de saber como fazer uma doação mensal. Tenho interesse em apoiar a causa dos jovens em vulnerabilidade.',              criadoEm: '2026-05-20T10:30:00' },
+  { id: 2, nome: 'Dr. João Santos', email: 'joao@clinica.com.br',  assunto: 'Parcerias com Clínicas',  canal: 'email',    ticket: 'TDB-2026-00002', mensagem: 'Tenho uma clínica odontológica em São Paulo e gostaria de firmar parceria com a Turma do Bem. Como proceder?',                 criadoEm: '2026-05-21T14:00:00' },
+  { id: 3, nome: 'Ana Oliveira',   email: 'ana@gmail.com',          assunto: 'Dúvida Geral',            canal: 'telegram', ticket: 'TDB-2026-00003', mensagem: 'Minha filha tem 15 anos e nunca foi ao dentista. Como faço para cadastrá-la na plataforma?',                                    criadoEm: '2026-05-22T09:15:00' },
+  { id: 4, nome: 'Pedro Lima',     email: 'pedro@jornal.com',       assunto: 'Imprensa',                canal: 'email',    ticket: 'TDB-2026-00004', mensagem: 'Faço parte da equipe do G1 e gostaria de realizar uma reportagem sobre o trabalho da ONG. Há contato disponível?',            criadoEm: '2026-05-23T11:00:00' },
+  { id: 5, nome: 'Carla Mendes',   email: 'carla@empresa.com',      assunto: 'Outros',                  canal: 'telegram', ticket: 'TDB-2026-00005', mensagem: 'Representamos uma empresa de materiais odontológicos e gostaríamos de fazer doações de insumos. Como podemos contribuir?',  criadoEm: '2026-05-23T15:30:00' },
 ];
 
 function corAssunto(assunto: string): { bg: string; text: string; border: string; label: string } {
@@ -154,16 +159,11 @@ function BotoesExportar({ onPDF, onCSV }: { onPDF: () => void; onCSV: () => void
 }
 
 export function AdminDashboard() {
-  const navigate = useNavigate();
-  const usuarioLogado = sessionStorage.getItem("usuarioLogado") || "Admin";
-
   const [telaAtiva, setTelaAtiva] = useState<'painel' | 'usuarios' | 'contatos'>('painel');
   const [pacientes, setPacientes] = useState<UsuarioPaciente[]>([]);
   const [dentistas, setDentistas] = useState<UsuarioDentista[]>([]);
   const [filtroBusca, setFiltroBusca] = useState('');
   const [carregandoUsuarios, setCarregandoUsuarios] = useState(false);
-  const [mensagemAdmin, setMensagemAdmin] = useState('');
-  const [tipoMensagemAdmin, setTipoMensagemAdmin] = useState<'sucesso' | 'erro'>('sucesso');
   const [confirmacaoPendente, setConfirmacaoPendente] = useState<{
     tipo: 'pacientes' | 'dentistas';
     id: number;
@@ -186,41 +186,26 @@ export function AdminDashboard() {
     coordenadas: {} as Record<string, [number, number]>,
   });
 
-  // Carrega estatísticas globais (auth centralizada em ProtectedRoute)
   useEffect(() => {
-    fetch(`${API_URL}/admin/estatisticas`)
-      .then(res => {
-        if (!res.ok) throw new Error("Erro 500 do servidor");
-        return res.json();
-      })
+    adminApi.getEstatisticas()
       .then(data => {
         setStatsAdmin({
           total_beneficiarios: data.total_beneficiarios || 0,
-          total_dentistas: data.total_dentistas || 0,
-          por_cidade: data.por_cidade || {},
+          total_dentistas:     data.total_dentistas || 0,
+          por_cidade:          data.por_cidade || {},
           ultimos_agendamentos: data.ultimos_agendamentos || [],
-          coordenadas: data.coordenadas || {},
+          coordenadas:         data.coordenadas || {},
         });
       })
       .catch(() => {
-        setStatsAdmin({
-          total_beneficiarios: 0,
-          total_dentistas: 0,
-          por_cidade: {},
-          ultimos_agendamentos: [],
-          coordenadas: {},
-        });
+        setStatsAdmin({ total_beneficiarios: 0, total_dentistas: 0, por_cidade: {}, ultimos_agendamentos: [], coordenadas: {} });
       });
   }, []);
 
-  /**
-   * Busca pacientes e dentistas em paralelo — sem setState, só retorna a Promise.
-   * Centralizado aqui para ser reutilizado nos 3 useEffects abaixo sem duplicar URLs.
-   */
   const fetchTodos = () =>
     Promise.all([
-      fetch(`${API_URL}/pacientes`).then(r => r.json()).catch((): UsuarioPaciente[] => []),
-      fetch(`${API_URL}/dentistas`).then(r => r.json()).catch((): UsuarioDentista[] => []),
+      adminApi.getPacientes().catch((): UsuarioPaciente[] => []),
+      adminApi.getDentistas().catch((): UsuarioDentista[] => []),
     ]);
 
   // 1. Mount: alimenta o mapa de calor com dados iniciais.
@@ -273,33 +258,32 @@ export function AdminDashboard() {
     const { tipo, id, nome } = confirmacaoPendente;
     setConfirmacaoPendente(null);
     try {
-      const res = await fetch(`${API_URL}/${tipo}/${id}`, { method: 'DELETE' });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        setTipoMensagemAdmin('erro');
-        setMensagemAdmin(`Erro ao inativar "${nome}": ${(err as { erro?: string }).erro ?? `HTTP ${res.status}`}`);
-      } else {
-        if (tipo === 'pacientes') setPacientes(prev => prev.filter(p => p.id !== id));
-        else setDentistas(prev => prev.filter(d => d.id !== id));
-        setTipoMensagemAdmin('sucesso');
-        setMensagemAdmin(`Conta de ${nome} inativada com sucesso.`);
-      }
-    } catch {
-      setTipoMensagemAdmin('erro');
-      setMensagemAdmin(`Erro de conexão ao tentar inativar "${nome}".`);
+      await adminApi.deletarUsuario(tipo, id);
+      if (tipo === 'pacientes') setPacientes(prev => prev.filter(p => p.id !== id));
+      else setDentistas(prev => prev.filter(d => d.id !== id));
+      toast.success(`Conta de ${nome} inativada com sucesso.`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Erro de conexão';
+      toast.error(`Erro ao inativar "${nome}": ${msg}`);
     }
-    setTimeout(() => setMensagemAdmin(''), 4000);
   };
 
-  // Carrega contatos ao entrar na aba — tenta API, usa mock como fallback
+  // Carrega contatos ao entrar na aba — tenta API, usa mock como fallback.
+  // Mescla também mensagens enviadas pelos pacientes via dashboard (localStorage).
   useEffect(() => {
     if (telaAtiva !== 'contatos') return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCarregandoContatos(true);
-    fetch(`${API_URL}/mensagens`)
-      .then(r => r.ok ? r.json() : Promise.reject())
-      .then(data => { setContatos(Array.isArray(data) && data.length > 0 ? data : CONTATOS_MOCK); })
-      .catch(() => setContatos(CONTATOS_MOCK))
+
+    const msgsPacientes: MensagemContato[] = (() => {
+      try { return JSON.parse(localStorage.getItem('tdb_msgs_admin') || '[]'); } catch { return []; }
+    })();
+
+    adminApi.getMensagens()
+      .then(data => {
+        const base = Array.isArray(data) && data.length > 0 ? data : CONTATOS_MOCK;
+        setContatos([...msgsPacientes, ...base]);
+      })
+      .catch(() => setContatos([...msgsPacientes, ...CONTATOS_MOCK]))
       .finally(() => setCarregandoContatos(false));
   }, [telaAtiva]);
 
@@ -309,7 +293,6 @@ export function AdminDashboard() {
     localStorage.setItem('tdb_status_contatos', JSON.stringify(novo));
   };
 
-  const handleLogout = () => { sessionStorage.clear(); navigate('/login'); };
 
   // KPIs estimados para o painel do admin — baseados no total de beneficiários cadastrados.
   // Fórmulas definidas pela equipe de negócio (Sprint 1):
@@ -360,7 +343,7 @@ export function AdminDashboard() {
     { id: 'painel',   icon: <LayoutDashboard size={20} />, label: 'Visão Geral', badge: 0 },
     { id: 'usuarios', icon: <Users size={20} />,           label: 'Usuários',    badge: pacientes.length + dentistas.length },
     { id: 'contatos', icon: <MessageSquare size={20} />,   label: 'Contatos',    badge: contatosAbertos },
-  ] as const;
+  ];
 
   const pacientesFiltrados = pacientes.filter(p =>
   (p.nomePaciente || p.nome || '').toLowerCase().includes(filtroBusca.toLowerCase()) ||
@@ -373,78 +356,21 @@ const dentistasFiltrados = dentistas.filter(d =>
 );
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans pb-16 md:pb-0 transition-colors duration-300">
-
-      {/* ── Top navigation bar ── */}
-      <header className="sticky top-0 z-40 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center gap-4">
-
-          {/* User info */}
-          <div className="flex items-center gap-3 flex-shrink-0">
-            <div className="w-9 h-9 bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl text-white flex items-center justify-center font-black text-base shadow-sm">
-              {usuarioLogado.charAt(0).toUpperCase()}
-            </div>
-            <div className="hidden sm:block">
-              <p className="text-sm font-bold text-gray-900 dark:text-white leading-none truncate max-w-[140px]">{usuarioLogado}</p>
-              <p className="text-xs text-orange-500 font-semibold mt-0.5">Administrador</p>
-            </div>
-          </div>
-
-          {/* Tab navigation — desktop */}
-          <nav className="hidden md:flex items-center gap-1 bg-slate-100 dark:bg-slate-700 rounded-xl p-1 mx-auto">
-            {navItems.map(item => (
-              <button
-                key={item.id}
-                onClick={() => { setTelaAtiva(item.id); if (item.id === 'usuarios') setCarregandoUsuarios(true); }}
-                className={`relative flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all duration-200 ${
-                  telaAtiva === item.id
-                    ? 'bg-white dark:bg-slate-600 text-gray-900 dark:text-white shadow-sm'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-white/60 dark:hover:bg-slate-600/60'
-                }`}
-              >
-                {item.icon}
-                {item.label}
-                {item.badge > 0 && (
-                  <span className="bg-orange-500 text-white text-[10px] font-black w-[18px] h-[18px] rounded-full flex items-center justify-center leading-none">
-                    {item.badge > 99 ? '99' : item.badge}
-                  </span>
-                )}
-              </button>
-            ))}
-          </nav>
-
-          {/* Logout */}
-          <button
-            onClick={handleLogout}
-            className="ml-auto flex items-center gap-2 text-slate-400 hover:text-red-500 text-sm font-bold transition-colors px-3 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30"
-            title="Sair"
-          >
-            <LogOut size={16} />
-            <span className="hidden sm:inline">Sair</span>
-          </button>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 md:px-8 py-8 w-full animate-fade-in">
-
-        {mensagemAdmin && (
-          <div className={`mb-6 px-5 py-3 rounded-xl font-bold text-sm flex items-center gap-2 ${
-            tipoMensagemAdmin === 'sucesso'
-              ? 'bg-green-50 border border-green-200 text-green-700'
-              : 'bg-red-50 border border-red-200 text-red-700'
-          }`}>
-            {tipoMensagemAdmin === 'sucesso'
-              ? <CheckCircle2 size={16} />
-              : <AlertTriangle size={16} />}
-            {mensagemAdmin}
-          </div>
-        )}
+    <DashboardLayout
+      navItems={navItems}
+      telaAtiva={telaAtiva}
+      onTelaChange={(id) => {
+        setTelaAtiva(id as typeof telaAtiva);
+        if (id === 'usuarios') setCarregandoUsuarios(true);
+      }}
+      roleName="Administrador"
+    >
 
         {telaAtiva === 'usuarios' && (
           <div className="animate-fade-in">
             <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Gerenciar Usuários</h2>
+                <h2 className="text-2xl font-display font-bold text-gray-800 dark:text-white">Gerenciar Usuários</h2>
                 <p className="text-gray-500 dark:text-slate-400 text-sm mt-1">Visualize e remova contas de pacientes e dentistas.</p>
               </div>
               <div className="relative">
@@ -481,9 +407,17 @@ const dentistasFiltrados = dentistas.filter(d =>
                             {(p.nomePaciente || p.nome || '?').charAt(0)}
                           </div>
                           <div className="min-w-0">
-                            <p className="font-bold text-gray-800 dark:text-white text-sm truncate">{p.nomePaciente || p.nome}</p>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="font-bold text-gray-800 dark:text-white text-sm truncate">{p.nomePaciente || p.nome}</p>
+                              <span className="inline-flex items-center gap-1 text-[10px] font-black px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 font-mono border border-slate-200 dark:border-slate-600">
+                                <Hash size={8} />{gerarTicket(p.id)}
+                              </span>
+                            </div>
                             <p className="text-xs text-gray-400 dark:text-slate-500 truncate">{p.email}</p>
-                            <p className="text-[11px] text-gray-400 dark:text-slate-500">{p.cidade}, {p.pais}</p>
+                            <p className="text-[11px] text-gray-400 dark:text-slate-500">
+                              {p.cidade}, {p.pais}
+                              {p.cpf && <span className="ml-2 font-mono opacity-70">· CPF: {mascaraCPF(p.cpf)}</span>}
+                            </p>
                           </div>
                         </div>
                         <button onClick={() => deletarUsuario('pacientes', p.id, p.nomePaciente || p.nome || '')}
@@ -538,7 +472,7 @@ const dentistasFiltrados = dentistas.filter(d =>
           <div className="animate-fade-in">
             <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Contatos Recebidos</h2>
+                <h2 className="text-2xl font-display font-bold text-gray-800 dark:text-white">Contatos Recebidos</h2>
                 <p className="text-gray-500 dark:text-slate-400 text-sm mt-1">Mensagens da plataforma com roteamento automático por assunto e rastreamento de status.</p>
               </div>
               {/* Filtro por assunto — roteamento automático */}
@@ -584,6 +518,8 @@ const dentistasFiltrados = dentistas.filter(d =>
                     const st = statusConfig(status);
                     const isOpen = expandido === key;
                     const dataFmt = c.criadoEm ? new Date(c.criadoEm).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+                    const ticket = c.ticket ?? gerarTicket(c.id ?? key);
+                    const canal  = canalConfig(c.canal ?? 'web');
                     return (
                       <div key={key} className={`bg-white dark:bg-slate-800 rounded-2xl border shadow-sm overflow-hidden transition-all ${cor.border}`}>
                         {/* Header clicável */}
@@ -599,7 +535,15 @@ const dentistasFiltrados = dentistas.filter(d =>
                           <div className="flex-1 min-w-0">
                             <div className="flex flex-wrap items-center gap-2 mb-1">
                               <p className="font-bold text-gray-900 dark:text-white text-sm">{c.nome}</p>
+                              {/* Ticket */}
+                              <span className="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 font-mono tracking-tight border border-slate-200 dark:border-slate-600">
+                                <Hash size={9} />{ticket}
+                              </span>
+                              {/* Canal de origem */}
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${canal.cls}`}>{canal.label}</span>
+                              {/* Assunto */}
                               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${cor.bg} ${cor.text} border ${cor.border}`}>{cor.label}</span>
+                              {/* Status */}
                               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${st.cls}`}>{st.label}</span>
                             </div>
                             <p className="text-xs text-gray-400 dark:text-slate-500 flex items-center gap-1.5">
@@ -613,6 +557,16 @@ const dentistasFiltrados = dentistas.filter(d =>
                         {/* Corpo expandido */}
                         {isOpen && (
                           <div className={`border-t ${cor.border} px-5 pb-5 pt-4 space-y-4 ${cor.bg}`}>
+                            {/* Linha de identificação do ticket */}
+                            <div className="flex flex-wrap items-center gap-3 pb-3 border-b border-black/5 dark:border-white/5">
+                              <div className="flex items-center gap-1.5 text-xs font-black text-slate-500 dark:text-slate-400 font-mono">
+                                <Ticket size={13} className="text-[#FF8C00]" />
+                                Ticket: <span className="text-[#FF8C00]">{ticket}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                                <span className={`font-bold px-2 py-0.5 rounded-full text-[10px] ${canal.cls}`}>{canal.label}</span>
+                              </div>
+                            </div>
                             <p className="text-gray-700 dark:text-slate-300 text-sm leading-relaxed">{c.mensagem}</p>
                             {/* Controle de status */}
                             <div className="flex flex-wrap items-center gap-2">
@@ -645,55 +599,55 @@ const dentistasFiltrados = dentistas.filter(d =>
 
         {telaAtiva === 'painel' && <>
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-800 dark:text-white">Painel Administrativo</h2>
+          <h2 className="text-3xl font-display font-bold text-gray-800 dark:text-white">Painel Administrativo</h2>
           <p className="text-gray-500 dark:text-slate-400 mt-1">Visão geral da operação global do Dentista na Nuvem.</p>
         </div>
 
         <div className="mb-8">
           <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2"><TrendingUp size={22} className="text-[#FF8C00]"/> Relatório de Impacto (2026)</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-gradient-to-br from-[#FF8C00] to-orange-600 p-6 rounded-2xl shadow-md text-white relative overflow-hidden group">
-              <Smile className="absolute -right-4 -bottom-4 text-white/20 group-hover:scale-110 transition-transform" size={100} />
-              <p className="text-orange-100 font-bold text-sm uppercase tracking-wider mb-1">Sorrisos Transformados</p>
-              <h4 className="text-4xl font-black">{sorrisosTransformados}</h4>
+            <div className="bg-gradient-to-br from-[#FF8C00] to-orange-600 p-6 rounded-2xl shadow-[0_8px_32px_rgba(255,140,0,0.28)] text-white relative overflow-hidden group hover:shadow-[0_12px_40px_rgba(255,140,0,0.38)] hover:-translate-y-0.5 transition-all duration-300">
+              <Smile className="absolute -right-4 -bottom-4 text-white/20 group-hover:scale-110 transition-transform duration-300" size={100} />
+              <p className="text-orange-100 font-bold text-[10px] uppercase tracking-[0.15em] mb-2">Sorrisos Transformados</p>
+              <h4 className="text-4xl font-display font-black">{sorrisosTransformados}</h4>
               <p className="text-xs text-orange-200 mt-2">+12% este mês</p>
             </div>
-            <div className="bg-gradient-to-br from-[#8dc63f] to-green-600 p-6 rounded-2xl shadow-md text-white relative overflow-hidden group">
-              <Clock className="absolute -right-4 -bottom-4 text-white/20 group-hover:scale-110 transition-transform" size={100} />
-              <p className="text-green-100 font-bold text-sm uppercase tracking-wider mb-1">Horas Clínicas Doadas</p>
-              <h4 className="text-4xl font-black">{horasDoadas}h</h4>
+            <div className="bg-gradient-to-br from-[#8dc63f] to-green-600 p-6 rounded-2xl shadow-[0_8px_32px_rgba(141,198,63,0.28)] text-white relative overflow-hidden group hover:shadow-[0_12px_40px_rgba(141,198,63,0.38)] hover:-translate-y-0.5 transition-all duration-300">
+              <Clock className="absolute -right-4 -bottom-4 text-white/20 group-hover:scale-110 transition-transform duration-300" size={100} />
+              <p className="text-green-100 font-bold text-[10px] uppercase tracking-[0.15em] mb-2">Horas Clínicas Doadas</p>
+              <h4 className="text-4xl font-display font-black">{horasDoadas}h</h4>
               <p className="text-xs text-green-200 mt-2">Pelos Dentistas Voluntários</p>
             </div>
-            <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 p-6 rounded-2xl shadow-sm relative overflow-hidden group">
-              <DollarSign className="absolute -right-4 -bottom-4 text-gray-100 dark:text-slate-700 group-hover:scale-110 transition-transform" size={100} />
-              <p className="text-gray-500 dark:text-slate-400 font-bold text-sm uppercase tracking-wider mb-1">Economia Social Gerada</p>
-              <h4 className="text-3xl font-black text-[#FF8C00]">{economiaGerada}</h4>
+            <div className="bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 p-6 rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.06)] relative overflow-hidden group hover:shadow-[0_8px_32px_rgba(0,0,0,0.10)] hover:-translate-y-0.5 transition-all duration-300">
+              <DollarSign className="absolute -right-4 -bottom-4 text-gray-100 dark:text-slate-700 group-hover:scale-110 transition-transform duration-300" size={100} />
+              <p className="text-gray-500 dark:text-slate-400 font-bold text-[10px] uppercase tracking-[0.15em] mb-2">Economia Social Gerada</p>
+              <h4 className="text-3xl font-display font-black text-[#FF8C00]">{economiaGerada}</h4>
               <p className="text-xs text-gray-400 dark:text-slate-500 mt-2">Valor poupado pelas famílias</p>
             </div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-sm flex items-center justify-between">
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-[0_4px_24px_rgba(0,0,0,0.05)] flex items-center justify-between hover:shadow-[0_8px_32px_rgba(141,198,63,0.12)] hover:-translate-y-0.5 transition-all duration-300">
             <div>
-              <h3 className="text-gray-500 dark:text-slate-400 text-sm font-bold mb-1 uppercase tracking-widest">Jovens na Fila</h3>
-              <p className="text-5xl font-black text-gray-800 dark:text-white">{statsAdmin.total_beneficiarios}</p>
+              <h3 className="text-gray-400 dark:text-slate-500 text-[10px] font-bold uppercase tracking-[0.15em] mb-2">Jovens na Fila</h3>
+              <p className="text-5xl font-display font-black text-gray-800 dark:text-white">{statsAdmin.total_beneficiarios}</p>
             </div>
-            <div className="p-4 bg-gray-50 dark:bg-slate-700 rounded-xl"><Users size={40} className="text-[#8dc63f]"/></div>
+            <div className="p-4 bg-green-50 dark:bg-green-950/30 rounded-2xl"><Users size={36} className="text-[#8dc63f]"/></div>
           </div>
 
-          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-sm flex items-center justify-between">
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-[0_4px_24px_rgba(0,0,0,0.05)] flex items-center justify-between hover:shadow-[0_8px_32px_rgba(255,140,0,0.12)] hover:-translate-y-0.5 transition-all duration-300">
             <div>
-              <h3 className="text-gray-500 dark:text-slate-400 text-sm font-bold mb-1 uppercase tracking-widest">Dentistas Voluntários</h3>
-              <p className="text-5xl font-black text-gray-800 dark:text-white">{statsAdmin.total_dentistas}</p>
+              <h3 className="text-gray-400 dark:text-slate-500 text-[10px] font-bold uppercase tracking-[0.15em] mb-2">Dentistas Voluntários</h3>
+              <p className="text-5xl font-display font-black text-gray-800 dark:text-white">{statsAdmin.total_dentistas}</p>
             </div>
-            <div className="p-4 bg-gray-50 dark:bg-slate-700 rounded-xl"><Heart size={40} className="text-[#FF8C00]"/></div>
+            <div className="p-4 bg-orange-50 dark:bg-orange-950/30 rounded-2xl"><Heart size={36} className="text-[#FF8C00]"/></div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
           <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-sm p-8 border border-gray-100 dark:border-slate-700 h-full flex flex-col">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2"><MapPin size={24} className="text-[#FF8C00]"/> Mapa de Calor (Demandas)</h3>
+            <h3 className="text-xl font-display font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2"><MapPin size={24} className="text-[#FF8C00]"/> Mapa de Calor (Demandas)</h3>
             <div className="flex-1 w-full rounded-2xl overflow-hidden border border-gray-200 dark:border-slate-600 relative" style={{ minHeight: '380px' }}>
               <MapContainer
                 center={[-15.0, -60.0]}
@@ -722,7 +676,7 @@ const dentistasFiltrados = dentistas.filter(d =>
 
           <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-sm p-8 border border-gray-100 dark:border-slate-700 h-full">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2"><CalendarDays size={24} className="text-[#8dc63f]"/> Agenda da Rede</h3>
+              <h3 className="text-xl font-display font-bold text-gray-800 dark:text-white flex items-center gap-2"><CalendarDays size={24} className="text-[#8dc63f]"/> Agenda da Rede</h3>
               <BotoesExportar
                 onPDF={() => exportarAtendimentosPDF(statsAdmin.ultimos_agendamentos)}
                 onCSV={() => exportarAtendimentosCSV(statsAdmin.ultimos_agendamentos)}
@@ -754,33 +708,6 @@ const dentistasFiltrados = dentistas.filter(d =>
           </div>
         </div>
         </>}
-      </main>
-
-      {/* ── Mobile bottom navigation ── */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-slate-200 shadow-[0_-4px_12px_rgba(0,0,0,0.06)]">
-        <div className="flex">
-          {navItems.map(item => (
-            <button
-              key={item.id}
-              onClick={() => { setTelaAtiva(item.id); if (item.id === 'usuarios') setCarregandoUsuarios(true); }}
-              className={`flex-1 flex flex-col items-center gap-1 py-3 px-1 transition-colors ${
-                telaAtiva === item.id ? 'text-orange-500' : 'text-slate-400'
-              }`}
-            >
-              <span className="relative">
-                {item.icon}
-                {item.badge > 0 && (
-                  <span className="absolute -top-1.5 -right-2.5 w-4 h-4 bg-orange-500 text-white text-[9px] font-black rounded-full flex items-center justify-center leading-none">
-                    {item.badge > 9 ? '9+' : item.badge}
-                  </span>
-                )}
-              </span>
-              <span className="text-[10px] font-bold leading-none">{item.label.split(' ')[0]}</span>
-            </button>
-          ))}
-        </div>
-      </nav>
-
       {/* ── Modal de confirmação de inativação ── */}
       {confirmacaoPendente && (
         <div
@@ -788,25 +715,25 @@ const dentistasFiltrados = dentistas.filter(d =>
           onClick={() => setConfirmacaoPendente(null)}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 border border-slate-100"
+            className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 border border-slate-100 dark:border-slate-700"
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center gap-4 mb-5">
-              <div className="bg-amber-50 p-3 rounded-xl shrink-0">
-                <Archive size={24} className="text-amber-600" />
+              <div className="bg-amber-50 dark:bg-amber-950/30 p-3 rounded-xl shrink-0">
+                <Archive size={24} className="text-amber-600 dark:text-amber-400" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-800">Inativar Conta</h3>
-                <p className="text-sm text-gray-500 truncate max-w-xs">{confirmacaoPendente.nome}</p>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-white">Inativar Conta</h3>
+                <p className="text-sm text-gray-500 dark:text-slate-400 truncate max-w-xs">{confirmacaoPendente.nome}</p>
               </div>
             </div>
-            <p className="text-gray-600 text-sm mb-8 leading-relaxed">
+            <p className="text-gray-600 dark:text-slate-300 text-sm mb-8 leading-relaxed">
               Deseja inativar este usuário? Ele perderá acesso à plataforma mas seus dados serão preservados.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setConfirmacaoPendente(null)}
-                className="flex-1 px-4 py-3 rounded-xl border border-slate-200 text-gray-600 font-bold text-sm hover:bg-slate-50 transition-colors"
+                className="flex-1 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 text-gray-600 dark:text-slate-300 font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
               >
                 Voltar
               </button>
@@ -820,6 +747,6 @@ const dentistasFiltrados = dentistas.filter(d =>
           </div>
         </div>
       )}
-    </div>
+    </DashboardLayout>
   );
 }

@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { API_URL } from '../config';
+import { toast } from 'sonner';
+import { pacientesApi, ofertasApi, iaApi } from '../lib/api';
+import { useAuth } from '../contexts/AuthContext';
+import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { calcularScore, type TipoDor } from '../utils/scoreUtils';
 import { imprimirRelatorio } from '../utils/relatorioUtils';
 import { StatusAgendamento } from '../components/StatusAgendamento';
@@ -8,7 +11,7 @@ import { ModalAvaliarPaciente } from '../components/ModalAvaliarPaciente';
 import { ModalFichaAtiva } from '../components/ModalFichaAtiva';
 import { Skeleton, EmptyState, Badge } from '../components/ui';
 import {
-  LayoutDashboard, Users, Calendar, LogOut,
+  LayoutDashboard, Users, Calendar,
   Search, MessageSquare, Send,
   MapPin, Phone, AlertCircle, Star, Filter, Clock, CheckCircle2, X,
   Heart, FileText, SearchX, CalendarDays,
@@ -115,13 +118,13 @@ function calcularScorePaciente(p: Paciente): number {
 
 export function DentistaDashboard() {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [telaAtiva, setTelaAtiva] = useState<'painel' | 'pacientes' | 'agenda'>('painel');
   const [pesquisa, setPesquisa] = useState('');
   const [pergunta, setPergunta] = useState('');
   const [respostaIA, setRespostaIA] = useState('');
   const [carregandoIA, setCarregandoIA] = useState(false);
-  const [mensagem, setMensagem] = useState('');
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
   const [meusPacientes, setMeusPacientes] = useState<Paciente[]>([]);
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
@@ -136,20 +139,22 @@ export function DentistaDashboard() {
   const [carregandoMeusPacientes, setCarregandoMeusPacientes] = useState(true);
   const [confirmarCancelamento, setConfirmarCancelamento] = useState<Paciente | null>(null);
 
-  const dentistId = sessionStorage.getItem('userId') || '0';
-  const usuarioLogado = sessionStorage.getItem('usuarioLogado') || 'Dentista';
-  const userRole = sessionStorage.getItem('userRole');
-  const [cidadeAtiva, setCidadeAtiva] = useState(sessionStorage.getItem('dentistaCidade') || 'São Paulo');
+  const dentistId    = user?.id ?? '0';
+  const usuarioLogado = user?.nome ?? 'Dentista';
+  const userRole     = user?.role;
+  const [cidadeAtiva, setCidadeAtiva] = useState(user?.dentistaCidade ?? 'São Paulo');
 
-  const showMensagem = (msg: string, ms = 3500) => {
-    setMensagem(msg);
-    setTimeout(() => setMensagem(''), ms);
+  const showMensagem = (msg: string) => {
+    if (msg.startsWith('Erro') || msg.toLowerCase().includes('erro')) {
+      toast.error(msg);
+    } else {
+      toast.success(msg);
+    }
   };
 
   const handleConcluirConsulta = async (idOferta: number) => {
     try {
-      const res = await fetch(`${API_URL}/ofertas/${idOferta}/concluir`, { method: 'PATCH' });
-      if (!res.ok) throw new Error();
+      await ofertasApi.concluir(idOferta);
       setAgendamentos(prev => prev.filter(a => a.id !== idOferta));
       showMensagem('Consulta marcada como concluída!');
     } catch {
@@ -166,25 +171,20 @@ export function DentistaDashboard() {
   useEffect(() => { localStorage.setItem('tdb_agendamentos', JSON.stringify(agendamentos)); }, [agendamentos]);
   useEffect(() => { localStorage.setItem('tdb_ofertasHorario', JSON.stringify(ofertasMapa)); }, [ofertasMapa]);
 
-  // Carrega pacientes adotados por este dentista
   useEffect(() => {
     const idNum = Number(dentistId);
     if (!idNum) { setCarregandoMeusPacientes(false); return; }
-    fetch(`${API_URL}/pacientes/adotados?idDentista=${idNum}`)
-      .then(res => res.json())
+    pacientesApi.getAdotados(idNum)
       .then(data => {
-        if (Array.isArray(data)) setMeusPacientes(data.map(mapearPaciente));
+        if (Array.isArray(data)) setMeusPacientes(data.map(p => mapearPaciente(p as unknown as Record<string, unknown>)));
         setCarregandoMeusPacientes(false);
       })
       .catch(() => { setCarregandoMeusPacientes(false); });
   }, [dentistId]);
 
-  // Carrega ofertas e agenda confirmada da API
   useEffect(() => {
-    const idDentista = sessionStorage.getItem('userId');
-    if (!idDentista) return;
-    fetch(`${API_URL}/ofertas/dentista/${idDentista}`)
-      .then(res => res.json())
+    if (!dentistId || dentistId === '0') return;
+    ofertasApi.getByDentista(dentistId)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .then((ofertas: any[]) => {
         if (!Array.isArray(ofertas)) return;
@@ -216,28 +216,24 @@ export function DentistaDashboard() {
   // Carrega fila de triagem (auth centralizada em ProtectedRoute)
   useEffect(() => {
     setCarregandoPacientes(true);
-    fetch(`${API_URL}/pacientes?cidade=${cidadeAtiva}`)
-      .then(res => res.json())
+    pacientesApi.getPorCidade(cidadeAtiva)
       .then(data => {
-        setPacientes(Array.isArray(data) ? data.map(mapearPaciente) : []);
+        setPacientes(Array.isArray(data) ? data.map(p => mapearPaciente(p as unknown as Record<string, unknown>)) : []);
         setCarregandoPacientes(false);
       })
       .catch(() => { setCarregandoPacientes(false); });
   }, [cidadeAtiva]);
 
-  // Recarrega dados ao voltar para a aba
   useEffect(() => {
     const onVisibilityChange = () => {
       if (document.visibilityState !== 'visible') return;
-      fetch(`${API_URL}/pacientes?cidade=${cidadeAtiva}`)
-        .then(r => r.json())
-        .then(data => { if (Array.isArray(data)) setPacientes(data.map(mapearPaciente)); })
+      pacientesApi.getPorCidade(cidadeAtiva)
+        .then(data => { if (Array.isArray(data)) setPacientes(data.map(p => mapearPaciente(p as unknown as Record<string, unknown>))); })
         .catch(() => {});
       const idNum = Number(dentistId);
       if (idNum) {
-        fetch(`${API_URL}/pacientes/adotados?idDentista=${idNum}`)
-          .then(r => r.json())
-          .then(data => { if (Array.isArray(data)) setMeusPacientes(data.map(mapearPaciente)); })
+        pacientesApi.getAdotados(idNum)
+          .then(data => { if (Array.isArray(data)) setMeusPacientes(data.map(p => mapearPaciente(p as unknown as Record<string, unknown>))); })
           .catch(() => {});
       }
     };
@@ -259,7 +255,6 @@ export function DentistaDashboard() {
 
   // ─── Handlers ───────────────────────────────────────────────────────────────
 
-  const handleLogout = () => { sessionStorage.clear(); navigate('/login'); };
 
   const handleAdicionarSlot = () => {
     if (!novaData || !novaHora) return;
@@ -274,16 +269,11 @@ export function DentistaDashboard() {
   const handleEnviarOferta = async () => {
     if (!fichaAtiva || slotsLivres.length === 0) return;
     try {
-      const res = await fetch(`${API_URL}/ofertas`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          idDentista: Number(dentistId), idPaciente: fichaAtiva.id,
-          procedimento: procedimentoOferta,
-          slots: slotsLivres.map(s => ({ data: s.data, hora: s.hora })),
-        }),
+      await ofertasApi.create({
+        idDentista: Number(dentistId), idPaciente: fichaAtiva.id,
+        procedimento: procedimentoOferta,
+        slots: slotsLivres.map(s => ({ data: s.data, hora: s.hora })),
       });
-      if (!res.ok) throw new Error('API error');
       setOfertasMapa(prev => ({ ...prev, [fichaAtiva.nome]: {
         dentistaNome: usuarioLogado, dentistaCidade: cidadeAtiva,
         procedimento: procedimentoOferta, slots: slotsLivres,
@@ -305,23 +295,15 @@ export function DentistaDashboard() {
     if (acao === 'adotado' && !idNum) { alert('Erro: ID do dentista não encontrado. Por favor, faça login novamente.'); return; }
 
     try {
-      const res = await fetch(`${API_URL}/pacientes/${paciente.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nome: paciente.nome, cidade: paciente.cidade, pais: paciente.pais,
-          tipoDor: paciente.tipo_dor !== 'Não informado' ? paciente.tipo_dor : undefined,
-          tempoDorDias: paciente.tempo_dor || 0,
-          rendaSalarioMinimo: paciente.renda || 0,
-          telefone: paciente.telefone,
-          status: acao,
-          ...(acao === 'adotado' ? { idDentistaResponsavel: idNum } : {}),
-        }),
+      await pacientesApi.update(paciente.id, {
+        nome: paciente.nome, cidade: paciente.cidade, pais: paciente.pais,
+        tipoDor: paciente.tipo_dor !== 'Não informado' ? paciente.tipo_dor : undefined,
+        tempoDorDias: paciente.tempo_dor || 0,
+        rendaSalarioMinimo: paciente.renda || 0,
+        telefone: paciente.telefone,
+        status: acao,
+        ...(acao === 'adotado' ? { idDentistaResponsavel: idNum } : {}),
       });
-      if (!res.ok) {
-        const errBody = await res.json().catch(() => ({}));
-        throw new Error((errBody as { erro?: string; causa?: string }).causa || (errBody as { erro?: string }).erro || `Erro HTTP ${res.status}`);
-      }
 
       if (acao === 'adotado') {
         setPacientes(prev => prev.filter(p => p.id !== paciente.id));
@@ -332,11 +314,10 @@ export function DentistaDashboard() {
       } else {
         setMeusPacientes(prev => prev.filter(p => p.id !== paciente.id));
         setAgendamentos(prev => prev.filter(a => a.paciente.nome !== paciente.nome));
-        fetch(`${API_URL}/pacientes?cidade=${cidadeAtiva}`)
-          .then(r => r.json())
-          .then(data => { if (Array.isArray(data)) setPacientes(data.map(mapearPaciente)); })
+        pacientesApi.getPorCidade(cidadeAtiva)
+          .then(data => { setPacientes(data.map(p => mapearPaciente(p as unknown as Record<string, unknown>))); })
           .catch(() => {});
-        showMensagem(`Adoção de ${paciente.nome} cancelada. Paciente retornou à fila.`, 4000);
+        showMensagem(`Adoção de ${paciente.nome} cancelada. Paciente retornou à fila.`);
       }
     } catch {
       showMensagem(acao === 'adotado' ? 'Erro ao adotar paciente. Tente novamente.' : 'Erro ao cancelar adoção. Tente novamente.');
@@ -345,8 +326,7 @@ export function DentistaDashboard() {
 
   const handleCancelarOferta = async (ofertaId: number, pacienteNome: string) => {
     try {
-      const res = await fetch(`${API_URL}/ofertas/${ofertaId}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error();
+      await ofertasApi.delete(ofertaId);
       setOfertasMapa(prev => {
         const novo = { ...prev };
         delete novo[pacienteNome];
@@ -362,14 +342,9 @@ export function DentistaDashboard() {
     if (!pergunta.trim()) return;
     setCarregandoIA(true);
     try {
-      const res = await fetch(`${API_URL}/IA/consultar`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ texto: pergunta, fila_json: JSON.stringify(pacientesFiltrados) }),
-      });
-      const data = await res.json();
+      const data = await iaApi.consultar(pergunta, JSON.stringify(pacientesFiltrados));
       let textoFinal = '';
-      if (data.candidates?.length > 0) textoFinal = data.candidates[0].content.parts[0].text;
+      if (data.candidates && data.candidates.length > 0) textoFinal = data.candidates[0].content.parts[0].text;
       else if (data.resposta) textoFinal = data.resposta;
       else if (data.error) textoFinal = 'Erro do servidor: ' + data.error;
       else textoFinal = 'A IA processou, mas não retornou um formato legível.';
@@ -396,81 +371,24 @@ export function DentistaDashboard() {
     { id: 'painel',    icon: <LayoutDashboard size={20} />, label: 'Fila de Triagem',    badge: 0 },
     { id: 'pacientes', icon: <Users size={20} />,           label: 'Meus Pacientes',      badge: meusPacientes.length },
     { id: 'agenda',    icon: <Calendar size={20} />,        label: 'Agenda de Consultas', badge: agendamentos.length },
-  ] as const;
+  ];
 
   // ─── Render ───────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans pb-16 md:pb-0 transition-colors duration-300">
-
-      {/* ── Top navigation bar ── */}
-      <header className="sticky top-0 z-40 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center gap-4">
-
-          {/* User info */}
-          <div className="flex items-center gap-3 flex-shrink-0">
-            <div className="w-9 h-9 bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl text-white flex items-center justify-center font-black text-base shadow-sm">
-              {usuarioLogado.charAt(0).toUpperCase()}
-            </div>
-            <div className="hidden sm:block">
-              <p className="text-sm font-bold text-gray-900 dark:text-white leading-none truncate max-w-[140px]">{usuarioLogado}</p>
-              <p className="text-xs text-orange-500 font-semibold mt-0.5">
-                {userRole === 'dev' ? 'Desenvolvedor' : 'Dentista Voluntário'}
-              </p>
-            </div>
-          </div>
-
-          {/* Tab navigation — desktop */}
-          <nav className="hidden md:flex items-center gap-1 bg-slate-100 dark:bg-slate-700 rounded-xl p-1 mx-auto">
-            {navItems.map(item => (
-              <button
-                key={item.id}
-                onClick={() => setTelaAtiva(item.id)}
-                className={`relative flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all duration-200 ${
-                  telaAtiva === item.id
-                    ? 'bg-white dark:bg-slate-600 text-gray-900 dark:text-white shadow-sm'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-white/60 dark:hover:bg-slate-600/60'
-                }`}
-              >
-                {item.icon}
-                {item.label}
-                {item.badge > 0 && (
-                  <span className="bg-orange-500 text-white text-[10px] font-black w-[18px] h-[18px] rounded-full flex items-center justify-center leading-none">
-                    {item.badge}
-                  </span>
-                )}
-              </button>
-            ))}
-          </nav>
-
-          {/* Logout */}
-          <button
-            onClick={handleLogout}
-            className="ml-auto flex items-center gap-2 text-slate-400 hover:text-red-500 text-sm font-bold transition-colors px-3 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30"
-            title="Sair"
-          >
-            <LogOut size={16} />
-            <span className="hidden sm:inline">Sair</span>
-          </button>
-        </div>
-      </header>
-
-      {/* Toast */}
-      {mensagem && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-green-50 text-green-700 border border-green-200 px-6 py-3 rounded-xl shadow-lg font-bold animate-fade-in flex items-center gap-2 whitespace-nowrap">
-          <CheckCircle2 size={20} /> {mensagem}
-        </div>
-      )}
-
-      {/* Conteúdo principal */}
-      <main className="max-w-7xl mx-auto px-4 md:px-8 py-8 w-full">
+    <DashboardLayout
+      navItems={navItems}
+      telaAtiva={telaAtiva}
+      onTelaChange={(id) => setTelaAtiva(id as typeof telaAtiva)}
+      roleName={userRole === 'dev' ? 'Desenvolvedor' : 'Dentista Voluntário'}
+    >
 
         {/* ── Fila de Triagem ── */}
         {telaAtiva === 'painel' && (
           <div className="animate-fade-in">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
               <div>
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Fila de Triagem Inteligente</h2>
+                <h2 className="text-2xl font-display font-bold text-gray-800 dark:text-white">Fila de Triagem Inteligente</h2>
                 {userRole === 'dev' ? (
                   <div className="flex items-center gap-2 mt-2">
                     <Filter size={14} className="text-gray-400 dark:text-slate-500" />
@@ -591,7 +509,7 @@ export function DentistaDashboard() {
             <div className="mb-6 flex items-center gap-3">
               <div className="bg-orange-50 dark:bg-orange-950/40 p-3 rounded-xl text-orange-500"><Users size={24} /></div>
               <div>
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Meus Pacientes Adotados</h2>
+                <h2 className="text-2xl font-display font-bold text-gray-800 dark:text-white">Meus Pacientes Adotados</h2>
                 <p className="text-gray-500 dark:text-slate-400 text-sm">Jovens que assumiu o tratamento até aos 18 anos.</p>
               </div>
             </div>
@@ -653,7 +571,7 @@ export function DentistaDashboard() {
             <div className="mb-6 flex items-center gap-3">
               <div className="bg-orange-50 dark:bg-orange-950/40 p-3 rounded-xl text-orange-500"><Calendar size={24} /></div>
               <div>
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-white">A Minha Agenda Voluntária</h2>
+                <h2 className="text-2xl font-display font-bold text-gray-800 dark:text-white">A Minha Agenda Voluntária</h2>
                 <p className="text-gray-500 dark:text-slate-400 text-sm">Próximos agendamentos vinculados ao Dentista na Nuvem.</p>
               </div>
             </div>
@@ -708,33 +626,6 @@ export function DentistaDashboard() {
             )}
           </div>
         )}
-      </main>
-
-      {/* ── Mobile bottom navigation ── */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 shadow-[0_-4px_12px_rgba(0,0,0,0.06)]">
-        <div className="flex">
-          {navItems.map(item => (
-            <button
-              key={item.id}
-              onClick={() => setTelaAtiva(item.id)}
-              className={`flex-1 flex flex-col items-center gap-1 py-3 px-1 transition-colors ${
-                telaAtiva === item.id ? 'text-orange-500' : 'text-slate-400'
-              }`}
-            >
-              <span className="relative">
-                {item.icon}
-                {item.badge > 0 && (
-                  <span className="absolute -top-1.5 -right-2.5 w-4 h-4 bg-orange-500 text-white text-[9px] font-black rounded-full flex items-center justify-center leading-none">
-                    {item.badge > 9 ? '9+' : item.badge}
-                  </span>
-                )}
-              </span>
-              <span className="text-[10px] font-bold leading-none">{item.label.split(' ')[0]}</span>
-            </button>
-          ))}
-        </div>
-      </nav>
-
       {/* ── Modais ── */}
       {pacienteSelecionado && (
         <ModalAvaliarPaciente
@@ -808,6 +699,6 @@ export function DentistaDashboard() {
         />
       )}
 
-    </div>
+    </DashboardLayout>
   );
 }

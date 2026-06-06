@@ -4,3 +4,5 @@ export { Badge } from './Badge';
 export { Input } from './Input';
 export { Skeleton } from './Skeleton';
 export { EmptyState } from './EmptyState';
+export { Dialog } from './Dialog';
+export { Select } from './Select';

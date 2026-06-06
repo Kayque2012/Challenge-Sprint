@@ -18,6 +18,11 @@
  */
 const PRODUCTION_API = 'https://challengesprint-api.azurewebsites.net';
 
-export const API_URL = import.meta.env.DEV && import.meta.env.VITE_API_URL
-  ? import.meta.env.VITE_API_URL.replace(/^\uFEFF/, '').trim()
+/**
+ * Em desenvolvimento (localhost), usa o proxy do Vite (/api \u2192 Azure)
+ * para contornar o bloqueio de CORS do backend sem precisar alterar o servidor.
+ * Em produ\u00E7\u00E3o (Vercel), aponta direto para o Azure.
+ */
+export const API_URL = import.meta.env.DEV
+  ? (import.meta.env.VITE_API_URL?.replace(/^\uFEFF/, '').trim() || '/api')
   : PRODUCTION_API;
