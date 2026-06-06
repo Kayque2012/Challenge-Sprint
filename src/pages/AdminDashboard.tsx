@@ -272,6 +272,7 @@ export function AdminDashboard() {
   // Mescla também mensagens enviadas pelos pacientes via dashboard (localStorage).
   useEffect(() => {
     if (telaAtiva !== 'contatos') return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCarregandoContatos(true);
 
     const msgsPacientes: MensagemContato[] = (() => {

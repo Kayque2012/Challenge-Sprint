@@ -220,6 +220,7 @@ export function PacienteDashboard() {
     const cObj = new Date(Number(cAno), Number(cMes) - 1, Number(cDia));
     confirmedDiaSemana     = DIAS_SEMANA[cObj.getDay()];
     confirmedDataFormatada = `${cDia}/${cMes}/${cAno}`;
+    // eslint-disable-next-line react-hooks/purity
     confirmedDiasAte       = Math.ceil((cObj.getTime() - Date.now()) / 86_400_000);
   }
 
