@@ -102,11 +102,11 @@ export function Logo({
             fontWeight:    900,
             lineHeight:    1.1,
             letterSpacing: '-0.02em',
-            color:         txt,
             fontFamily:    'inherit',
           }}
         >
-          Dentista na Nuvem
+          <span style={{ color: '#ffffff' }}>Dentista </span>
+          <span style={{ color: txt }}>na Nuvem</span>
         </span>
       </span>
     );
