@@ -1,16 +1,58 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 50" width="56" height="50"
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 70 60" width="70" height="60"
      fill="none" role="img" aria-label="Dentista na Nuvem">
   <title>Dentista na Nuvem</title>
-  <!--
-    Cloud horizon mark — a single stroke following the profile of three
-    soft cumulus forms seen from below. Reads as: cloud (nuvem), aspiration,
-    warmth. Works monochromatic, inverted, embossed.
-  -->
-  <path
-    d="M 4,44 C 7,44 10,22 18,22 C 22,22 22,10 28,10 C 34,10 34,22 38,22 C 46,22 49,44 52,44"
-    stroke="#FF8C00"
-    stroke-width="3.5"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  />
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#FFC03A"/>
+      <stop offset="100%" stop-color="#C05500"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Nuvem grande (atrás) -->
+  <path d="
+    M 20,50
+    C 14,50 12,44 15,39
+    C 12,36 13,29 18,27
+    C 18,20 23,16 29,18
+    C 30,12 36,9  43,12
+    C 48,9  55,12 56,19
+    C 61,20 64,26 62,33
+    C 66,37 64,44 58,46
+    Z"
+    stroke="url(#g)" stroke-width="2.3" stroke-linejoin="round" fill="none"/>
+
+  <!-- Nuvem pequena (frente) -->
+  <path d="
+    M 8,55
+    C 3,55 2,49  5,44
+    C 2,41  3,35  8,33
+    C 8,26 13,22 19,24
+    C 20,18 26,16 32,19
+    C 37,16 43,19 44,26
+    C 48,27 50,33 48,39
+    C 51,43 49,50 43,52
+    Z"
+    stroke="url(#g)" stroke-width="2.2" stroke-linejoin="round" fill="none"/>
+
+  <!-- Dente (centralizado dentro da nuvem pequena) -->
+  <path d="
+    M 18,34
+    C 17,30 19,27 22,26
+    C 24,25 26,26 28,27
+    C 29,27.5 30,27.5 31,27
+    C 34,26 36,29 36,33
+    C 37,36 36,39 35,42
+    C 34,45 33,47 31.5,47
+    C 30,47 29.5,45 29,42.5
+    C 28.5,40.5 28,40 25,40
+    C 22,40 21.5,40.5 21,42.5
+    C 20.5,45 20,47 18.5,47
+    C 17,47 16,45 15,42
+    C 14,39 13,36 14,33
+    Z"
+    stroke="url(#g)" stroke-width="1.9" stroke-linejoin="round" fill="none"/>
+
+  <!-- Sulco central do dente -->
+  <line x1="28" y1="27" x2="28" y2="40"
+        stroke="url(#g)" stroke-width="1.4" stroke-linecap="round"/>
 </svg>
