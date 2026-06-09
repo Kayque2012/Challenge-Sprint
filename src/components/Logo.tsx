@@ -102,7 +102,7 @@ export function Logo({
             fontWeight:    800,
             lineHeight:    1.1,
             letterSpacing: '0em',
-            fontFamily:    "'Nunito', sans-serif",
+            fontFamily:    "'Plus Jakarta Sans', sans-serif",
           }}
         >
           <span style={{ color: '#ffffff' }}>Dentista </span>
