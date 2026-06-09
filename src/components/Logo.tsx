@@ -34,9 +34,6 @@ const VB_H = 50;
  * Cubic-bezier tangents are horizontal at every junction → C1 continuity →
  * a single, seamless S-wave with no visible kinks.
  */
-const CLOUD_PATH =
-  'M 4,44 C 7,44 10,22 18,22 C 22,22 22,10 28,10 C 34,10 34,22 38,22 C 46,22 49,44 52,44';
-
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface LogoProps {
