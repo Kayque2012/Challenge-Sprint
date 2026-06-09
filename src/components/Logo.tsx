@@ -74,25 +74,16 @@ export function Logo({
   const w   = Math.round(size * (VB_W / VB_H));   // ≈ size × 1.12 — nearly square
   const txt = textColor ?? color;
 
-  // ── The mark SVG ────────────────────────────────────────────────────────────
-  const mark = (svgProps: React.SVGProps<SVGSVGElement> = {}) => (
-    <svg
+  // ── The mark ────────────────────────────────────────────────────────────────
+  const mark = (extraProps: React.ImgHTMLAttributes<HTMLImageElement> = {}) => (
+    <img
+      src="/icone.png"
+      alt="Dentista na Nuvem"
       width={w}
       height={h}
-      viewBox={`0 0 ${VB_W} ${VB_H}`}
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-      fill="none"
-      {...svgProps}
-    >
-      <path
-        d={CLOUD_PATH}
-        stroke={color}
-        strokeWidth="3.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
+      style={{ objectFit: 'contain' }}
+      {...extraProps}
+    />
   );
 
   // ── Icon only ───────────────────────────────────────────────────────────────
