@@ -99,10 +99,10 @@ export function Logo({
         <span
           style={{
             fontSize:      `${Math.round(size * 0.55)}px`,
-            fontWeight:    900,
+            fontWeight:    800,
             lineHeight:    1.1,
-            letterSpacing: '-0.02em',
-            fontFamily:    'inherit',
+            letterSpacing: '0em',
+            fontFamily:    "'Nunito', sans-serif",
           }}
         >
           <span style={{ color: '#ffffff' }}>Dentista </span>
