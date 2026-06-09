@@ -56,7 +56,7 @@ export function Header() {
             <Link to="/" className="flex items-center group">
               <Logo
                 variant="full"
-                size={28}
+                size={44}
                 color={brand}
                 className="transition-opacity duration-200 group-hover:opacity-80"
               />
@@ -229,7 +229,7 @@ export function Header() {
         {/* Drawer header */}
         <div className="flex justify-between items-center border-b border-gray-100 dark:border-slate-700 px-6 py-5">
           <div className="flex items-center">
-            <Logo variant="full" size={24} color={brand} />
+            <Logo variant="full" size={40} color={brand} />
           </div>
           <button onClick={() => setIsMenuOpen(false)} className="text-gray-400 hover:text-red-500 transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
